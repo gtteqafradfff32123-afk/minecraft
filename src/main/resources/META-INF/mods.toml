@@ -1,0 +1,29 @@
+modLoader="javafml"
+loaderVersion="[36,)"
+license="All rights reserved"
+
+[[mods]]
+modId="titanforge"
+version="1.0.0"
+displayName="TitanForge"
+logoFile=""
+credits=""
+authors=""
+description='''
+TitanForge mod - custom enchanting GUI with 10 new enchantments
+'''
+[[dependencies.titanforge]]
+    modId="forge"
+    mandatory=true
+    versionRange="[36,)"
+    ordering="NONE"
+    side="BOTH"
+[[dependencies.titanforge]]
+    modId="minecraft"
+    mandatory=true
+    versionRange="[1.16.5,1.17)"
+    ordering="NONE"
+    side="BOTH"
+
+[[mixins]]
+config = "titanforge.mixins.json"

@@ -1,0 +1,12 @@
+{
+  "blood_frenzy_breath": {
+    "category": "player",
+    "subtitle": "Heavy breathing",
+    "sounds": [ "titanforge:blood_frenzy_breath" ]
+  },
+  "danger_around_the_corner": {
+    "category": "ambient",
+    "subtitle": "Rage",
+    "sounds": [ "titanforge:danger_around_the_corner" ]
+  }
+}

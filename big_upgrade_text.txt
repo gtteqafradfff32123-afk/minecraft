@@ -1,0 +1,437 @@
+﻿Document
+╨С╨Ю╨Ы╨м╨и╨Ю╨Щ ╨Р╨Я╨У╨а╨Х╨Щ╨Ф: ╨║╨╛╨┐╨╕╤П ╨╕╨│╤А╨╛╨║╨░ ╨▓╨╝╨╡╤Б╤В╨╛ ╨╖╨╛╨╝╨▒╨╕ + ╤З╨░╤В-╨Ш╨Ш + ╤А╨░╨╖╤А╤Г╤И╨╡╨╜╨╕╨╡ ╨╝╨╕╤А╨░ ╨┐╨╛ ╨▓╤Б╨╡╨╝╤Г ╨╕╨╖╨╝╨╡╤А╨╡╨╜╨╕╤О
+╨С╨Ю╨Ы╨м╨и╨Ю╨Щ ╨Р╨Я╨У╨а╨Х╨Щ╨Ф ╨╗╨╕╨╝╨╕╨╜╨░╨╗╤М╨╜╨╛╨│╨╛ ╨┐╤А╨╛╤Б╤В╤А╨░╨╜╤Б╤В╨▓╨░
+╨Я╨╡╤А╨╡╤А╨░╨▒╨╛╤В╨║╨░ ╨┐╨╛ ╤В╨▓╨╛╨╕╨╝ ╨┐╤Г╨╜╨║╤В╨░╨╝. ╨Ч╨╛╨╝╨▒╨╕ ╤Г╨▒╨╕╤А╨░╨╡╨╝, ╨▓╨╝╨╡╤Б╤В╨╛ ╨╜╨╕╤Е
+╨║╨╛╨┐╨╕╤П ╨╕╨│╤А╨╛╨║╨░
+╤Б ╤З╨░╤В╨╛╨╝ ╨╕ ╨Ш╨Ш. ╨Ь╨╕╤А ╤А╨░╨╖╤А╤Г╤И╨░╨╡╤В╤Б╤П ╨┐╨╛ ╨▓╤Б╨╡╨╝╤Г ╨╕╨╖╨╝╨╡╤А╨╡╨╜╨╕╤О, ╨░ ╨╜╨╡ ╨┐╨╛╨┤ ╨╜╨╛╨│╨░╨╝╨╕. ╨в╨░╨╣╨╝╨╡╤А 6 ╨╝╨╕╨╜╤Г╤В, ╤Г╨▒╨╕╤В╤М ╨║╨╛╨┐╨╕╤О 3 ╤А╨░╨╖╨░.
+╨з╨Х╨б╨в╨Э╨Ю ╨┐╤А╨╛ ╨┤╨▓╨░ ╨┐╤Г╨╜╨║╤В╨░ (╨┐╤А╨╛╤З╨╕╤В╨░╨╣ ╨┐╨╡╤А╨▓╤Л╨╝)
+1. ┬л╨а╨╡╨░╨╗╤М╨╜╤Л╨╣ ╨Ш╨Ш ╨║╨░╨║ ╤Г ╨╕╨│╤А╨╛╨║╨░┬╗ ╨╕ ┬л╨░╨╜╨░╨╗╨╕╨╖╨╕╤А╤Г╨╡╤В ╤Д╤А╨░╨╖╤Г, ╨▓╤Л╨┤╨░╤С╤В ╨╗╤Г╤З╤И╨╕╨╣ ╨╛╤В╨▓╨╡╤В┬╗.
+╨Э╨░╤Б╤В╨╛╤П╤Й╨╕╨╣ ╨Ш╨Ш ╤Г╤А╨╛╨▓╨╜╤П ChatGPT
+╨▓╨╜╤Г╤В╤А╨╕ Forge-╨╝╨╛╨┤╨░ offline ╨╜╨╡╨▓╨╛╨╖╨╝╨╛╨╢╨╡╨╜
+тАФ ╨╜╨╡╤В ╨╝╨╛╨┤╨╡╨╗╨╕, ╨╜╨╡╤В ╨╜╨╡╨╣╤А╨╛╤Б╨╡╤В╨╕ ╨▓ ╨╕╨│╤А╨╡. ╨Х╤Б╤В╤М ╨┤╨▓╨░ ╤А╨╡╨░╨╗╤М╨╜╤Л╤Е ╨┐╤Г╤В╨╕:
+╨Т╨░╤А╨╕╨░╨╜╤В ╨Р (offline, ╨▒╨╡╨╖ ╨╕╨╜╤В╨╡╤А╨╜╨╡╤В╨░):
+╤Б╨╕╤Б╤В╨╡╨╝╨░ ┬л╨╜╨░╨╝╨╡╤А╨╡╨╜╨╕╨╣┬╗ (intent-matching). ╨Ъ╨╛╨┐╨╕╤П ╤А╨░╨╖╨▒╨╕╤А╨░╨╡╤В ╤Б╨╛╨╛╨▒╤Й╨╡╨╜╨╕╨╡ ╨╕╨│╤А╨╛╨║╨░ ╨╜╨░ ╨║╨╗╤О╤З╨╡╨▓╤Л╨╡ ╤Б╨╗╨╛╨▓╨░/╨┐╨░╤В╤В╨╡╤А╨╜╤Л ╨╕ ╨▓╤Л╨┤╨░╤С╤В ╨╗╤Г╤З╤И╨╕╨╣ ╨╛╤В╨▓╨╡╤В ╨╕╨╖ ╨│╨╛╤В╨╛╨▓╤Л╤Е ╨▓╨╡╤В╨╛╨║ (┬л╤В╤Л ╨║╤В╨╛┬╗ тЖТ ╨╛╤В╨▓╨╡╤З╨░╨╡╤В ╨┐╤А╨╛ ╨┤╨▓╨╛╨╣╨╜╨╕╨║╨░, ┬л╨╖╨░╤З╨╡╨╝┬╗ тЖТ ╤Д╨╕╨╗╨╛╤Б╨╛╤Д╤Б╨║╨╕╨╣ ╨╛╤В╨▓╨╡╤В, ╤Г╨│╤А╨╛╨╖╨░ тЖТ ╨╖╨╗╨╛╨▓╨╡╤Й╨╕╨╣ ╨╛╤В╨▓╨╡╤В). ╨н╤В╨╛ ╨Э╨Х ╨╜╨░╤Б╤В╨╛╤П╤Й╨╕╨╣ ╨Ш╨Ш, ╨╜╨╛ ╨╛╤Й╤Г╤Й╨░╨╡╤В╤Б╤П ╤Г╨╝╨╜╤Л╨╝, ╨╡╤Б╨╗╨╕ ╨▓╨╡╤В╨╛╨║ ╨╝╨╜╨╛╨│╨╛. ╨а╨░╨▒╨╛╤В╨░╨╡╤В ╨▓╤Б╨╡╨│╨┤╨░, ╨▒╨╡╤Б╨┐╨╗╨░╤В╨╜╨╛.
+╨Т╨░╤А╨╕╨░╨╜╤В ╨С (╨╜╨░╤Б╤В╨╛╤П╤Й╨╕╨╣ ╨Ш╨Ш):
+╨╝╨╛╨┤ ╤И╨╗╤С╤В ╤Б╨╛╨╛╨▒╤Й╨╡╨╜╨╕╨╡ ╨╕╨│╤А╨╛╨║╨░ ╨╜╨░ ╨▓╨╜╨╡╤И╨╜╨╕╨╣
+LLM API
+(OpenAI/╨╗╨╛╨║╨░╨╗╤М╨╜╨░╤П LLaMA ╤З╨╡╤А╨╡╨╖ HTTP) ╨╕ ╨┐╨╛╨╗╤Г╤З╨░╨╡╤В ╨╢╨╕╨▓╨╛╨╣ ╨╛╤В╨▓╨╡╤В. ╨Т╨╛╤В ╤Н╤В╨╛ ╤А╨╡╨░╨╗╤М╨╜╨╛ ┬л╨░╨╜╨░╨╗╨╕╨╖╨╕╤А╤Г╨╡╤В ╨╕ ╨╛╤В╨▓╨╡╤З╨░╨╡╤В ╨║╨░╨║ ╨Ш╨Ш┬╗. ╨Э╨╛ ╨╜╤Г╨╢╨╡╨╜ ╨╕╨╜╤В╨╡╤А╨╜╨╡╤В + API-╨║╨╗╤О╤З + ╤Н╤В╨╛ ╤Г╨╢╨╡ ╨╜╨╡ ╤З╨╕╤Б╤В╨╛ ╨║╨╗╨╕╨╡╨╜╤В╤Б╨║╨╕╨╣ ╨╝╨╛╨┤.
+╨Э╨╕╨╢╨╡ ╤А╨░╤Б╨┐╨╕╤Б╨░╨╜
+╨Т╨░╤А╨╕╨░╨╜╤В ╨Р ╨┐╨╛╨╗╨╜╨╛╤Б╤В╤М╤О
+(╤А╨░╨▒╨╛╤З╨╕╨╣ ╤Б╤А╨░╨╖╤Г) +
+╤Е╤Г╨║ ╨┤╨╗╤П ╨Т╨░╤А╨╕╨░╨╜╤В╨░ ╨С
+(╨║╤Г╨┤╨░ ╨▓╨╛╤В╨║╨╜╤Г╤В╤М API, ╨╡╤Б╨╗╨╕ ╨╖╨░╤Е╨╛╤З╨╡╤И╤М ╨╜╨░╤Б╤В╨╛╤П╤Й╨╕╨╣ ╨Ш╨Ш). ╨Т╤Л╨▒╨╛╤А ╨╖╨░ ╤В╨╛╨▒╨╛╨╣.
+2. ╨з╨░╤В ╤Б╨╡╨╣╤З╨░╤Б ╨╜╨╡ ╨┐╨╕╤И╨╡╤В
+тАФ ╨┐╨╛╤З╨╡╨╝╤Г ╨╕ ╤Д╨╕╨║╤Б ╨╜╨╕╨╢╨╡, ╤Н╤В╨╛ ╨▒╨░╨│ ╨╛╤В╨┐╤А╨░╨▓╨║╨╕ ╨╜╨░ ╨║╨╗╨╕╨╡╨╜╤В, ╤З╨╕╨╜╨╕╨╝.
+1. ╨д╨Ш╨Ъ╨б: ╨┐╨╛╤З╨╡╨╝╤Г ╨║╨╛╨┐╨╕╤П ╨╜╨╡ ╨┐╨╕╤И╨╡╤В ╨▓ ╤З╨░╤В
+╨б╨║╨╛╤А╨╡╨╡ ╨▓╤Б╨╡╨│╨╛ ╤Б╨╗╨░╨╗╨╕ ╤З╨╡╤А╨╡╨╖ ╤Б╨╡╤А╨▓╨╡╤А╨╜╤Л╨╣
+sendMessage
+╨╜╨╡ ╤В╨╛╨╝╤Г ╨╛╨▒╤К╨╡╨║╤В╤Г, ╨╗╨╕╨▒╨╛ ╨╜╨╡ ╨╜╨░ ╨║╨╗╨╕╨╡╨╜╤В ╨║╨╛╨╜╨║╤А╨╡╤В╨╜╨╛╨│╨╛ ╨╕╨│╤А╨╛╨║╨░. ╨Я╤А╨░╨▓╨╕╨╗╤М╨╜╨░╤П ╨╛╤В╨┐╤А╨░╨▓╨║╨░ ╨Ы╨Ш╨з╨Э╨Ю ╨╢╨╡╤А╤В╨▓╨╡ ╨▓ ╨╗╨╕╨╝╨╕╨╜╨░╨╗╨╡:
+public static void sendCopyMessage(ServerPlayerEntity target, String copyName, String text) {
+// ╤Д╨╛╤А╨╝╨░╤В ╨║╨░╨║ ╨╛╨▒╤Л╤З╨╜╨╛╨╡ ╤З╨░╤В-╤Б╨╛╨╛╨▒╤Й╨╡╨╜╨╕╨╡ ╨╛╤В ╨┤╤А╤Г╨│╨╛╨│╨╛ ╨╕╨│╤А╨╛╨║╨░: <╨Ш╨╝╤П> ╤В╨╡╨║╤Б╤В
+ITextComponent msg = new StringTextComponent("┬з7<" + copyName + "> ┬зf" + text);
+// ChatType.CHAT + UUID ╨╛╤В╨┐╤А╨░╨▓╨╕╤В╨╡╨╗╤П (╨╝╨╛╨╢╨╜╨╛ DUMMY). ╨Ю╤В╨┐╤А╨░╨▓╨╗╤П╨╡╨╝ ╨в╨Ю╨Ы╨м╨Ъ╨Ю ╤Н╤В╨╛╨╝╤Г ╨╕╨│╤А╨╛╨║╤Г.
+target.connection.sendPacket(new SChatPacket(msg, ChatType.CHAT, Util.DUMMY_UUID));
+}
+╨Ъ╨╗╤О╤З╨╡╨▓╨╛╨╡:
+target.connection.sendPacket(new SChatPacket(...))
+╤И╨╗╤С╤В ╨┐╨░╨║╨╡╤В ╨Ы╨Ш╨з╨Э╨Ю ╤Н╤В╨╛╨╝╤Г ╨╕╨│╤А╨╛╨║╤Г, ╨╜╨╕╨║╤В╨╛ ╨╜╨░ ╤Б╨╡╤А╨▓╨╡╤А╨╡ ╨▒╨╛╨╗╤М╤И╨╡ ╨╜╨╡ ╤Г╨▓╨╕╨┤╨╕╤В. ╨Х╤Б╨╗╨╕ ╤А╨░╨╜╤М╤И╨╡ ╤В╤Л ╤Б╨╗╨░╨╗
+world.getServer().getPlayerList().sendMessage(...)
+тАФ ╤Н╤В╨╛ ╤И╨╗╨╛ ╨▓╤Б╨╡╨╝, ╨╕/╨╕╨╗╨╕ ╨╜╨░ ╨║╨╗╨╕╨╡╨╜╤В╨╡ ╨╜╨╡ ╨╛╤В╨╛╨▒╤А╨░╨╢╨░╨╗╨╛╤Б╤М. ╨Ш╤Б╨┐╨╛╨╗╤М╨╖╤Г╨╣ connection ╨║╨╛╨╜╨║╤А╨╡╤В╨╜╨╛╨│╨╛ ╨╕╨│╤А╨╛╨║╨░.
+2. ╨Ъ╨╛╨┐╨╕╤П ╨╕╨│╤А╨╛╨║╨░ ╨▓╨╝╨╡╤Б╤В╨╛ ╨╖╨╛╨╝╨▒╨╕ (PlayerCopyEntity)
+╨г╨▒╨╕╤А╨░╨╡╨╝
+StunZombieEntity
+╨╕╨╖ ╤Б╤В╨╡╨╣╤В-╨╝╨░╤И╨╕╨╜╤Л. ╨Э╨╛╨▓╨░╤П ╤Б╤Г╤Й╨╜╨╛╤Б╤В╤М
+PlayerCopyEntity extends MobEntity
+╤Б╨╛ ╤Б╨║╨╕╨╜╨╛╨╝ ╤А╨╡╨░╨╗╤М╨╜╨╛╨│╨╛ ╨╕╨│╤А╨╛╨║╨░ (╨╝╨╡╤Е╨░╨╜╨╕╨║╨░ ╤Б╨║╨╕╨╜╨░ ╤В╨░ ╨╢╨╡, ╤З╤В╨╛ ╤Г
+ShadowEntity
+, ╨╜╨╛ ╨║╨╛╨┐╨╕╤П ╨Р╨Ъ╨в╨Ш╨Т╨Э╨Р╨п: ╤Е╨╛╨┤╨╕╤В, ╨┐╨╕╤И╨╡╤В, ╨┤╨╡╤А╤С╤В╤Б╤П, ╨┤╤Г╨╝╨░╨╡╤В).
+public class PlayerCopyEntity extends MobEntity {
+private static final DataParameter<Optional<UUID>> SKIN_OWNER =
+EntityDataManager.createKey(PlayerCopyEntity.class, DataSerializers.OPTIONAL_UNIQUE_ID);
+private static final DataParameter<String> COPY_NAME =
+EntityDataManager.createKey(PlayerCopyEntity.class, DataSerializers.STRING);
+private int chatCooldown = 0;
+private int livesLeft = 3; // ╤Г╨▒╨╕╤В╤М 3 ╤А╨░╨╖╨░ ╤З╤В╨╛╨▒╤Л ╨▓╤Л╨▒╤А╨░╤В╤М╤Б╤П
+private GameProfile cachedProfile = null;
+@Override protected void registerData() {
+super.registerData();
+this.dataManager.register(SKIN_OWNER, Optional.empty());
+this.dataManager.register(COPY_NAME, "");
+}
+public void setSkinOwner(UUID id) { this.dataManager.set(SKIN_OWNER, Optional.of(id)); cachedProfile = null; }
+public UUID getSkinOwner() { return this.dataManager.get(SKIN_OWNER).orElse(null); }
+public void setCopyName(String n) { this.dataManager.set(COPY_NAME, n); }
+public String getCopyName() { return this.dataManager.get(COPY_NAME); }
+// ╨Э╨Х╨в ╨Э╨Ш╨Ъ╨Р: ╤А╨╡╨╜╨┤╨╡╤А╨╕╨╝ ╨▒╨╡╨╖ ╨╜╨╡╨╣╨╝-╤В╨╡╨│╨░
+@Override public boolean isCustomNameVisible() { return false; }
+@Override public ITextComponent getDisplayName() { return new StringTextComponent(""); }
+public static AttributeModifierMap.MutableAttribute registerAttributes() {
+return MobEntity.func_233666_p_()
+.createMutableAttribute(Attributes.MAX_HEALTH, 40.0D)
+.createMutableAttribute(Attributes.MOVEMENT_SPEED, 0.30D)
+.createMutableAttribute(Attributes.ATTACK_DAMAGE, 4.0D)
+.createMutableAttribute(Attributes.FOLLOW_RANGE, 128.0D);
+}
+@Override protected void registerGoals() {
+// ╨║╨╛╨┐╨╕╤П ╨╕╤Б╨┐╨╛╨╗╤М╨╖╤Г╨╡╤В ╨г╨Ь╨Э╨л╨Щ ╤Б╤В╨░╨║╨╡╤А-goal (╨╕╨╖ ╤Б╤В╤А╨░╨╜╨╕╤Ж╤Л ╨┐╤А╨╛ ╨Ш╨Ш ╤В╨╡╨╜╨╕) + ╨┐╤А╨╕╨▒╨╗╨╕╨╢╨╡╨╜╨╕╨╡ ╨║ ╨╕╨│╤А╨╛╨║╤Г
+this.goalSelector.addGoal(1, new PlayerCopyStalkGoal(this));
+this.goalSelector.addGoal(2, new SwimGoal(this));
+}
+// ╤Б╨║╨╕╨╜ тАФ ╨║╨░╨║ ╤Г ╤В╨╡╨╜╨╕, ╨╢╨╕╨▓╨╛╨╣ ╨┐╤А╨╛╤Д╨╕╨╗╤М ╨▓ ╨┐╤А╨╕╨╛╤А╨╕╤В╨╡╤В╨╡
+public GameProfile getSkinProfile() {
+UUID id = getSkinOwner(); if (id == null) return null;
+if (cachedProfile != null && id.equals(cachedProfile.getId())) return cachedProfile;
+PlayerEntity p = this.world.getPlayerByUuid(id);
+cachedProfile = (p != null) ? p.getGameProfile() : new GameProfile(id, getCopyName());
+return cachedProfile;
+}
+// === ╨б╨Ь╨Х╨а╨в╨м ╨Ъ╨Ю╨Я╨Ш╨Ш: ╨╜╨╡ ╤Г╨╝╨╕╤А╨░╨╡╤В ╤Б╤А╨░╨╖╤Г, ╨╕╤Б╤З╨╡╨╖╨░╨╡╤В ╨╕ ╤Б╨┐╤А╨░╤И╨╕╨▓╨░╨╡╤В "╨╖╨░╤З╨╡╨╝?" ===
+@Override
+public boolean attackEntityFrom(DamageSource src, float amount) {
+if (src.getTrueSource() instanceof ServerPlayerEntity) {
+ServerPlayerEntity attacker = (ServerPlayerEntity) src.getTrueSource();
+livesLeft--;
+LiminalChatAI.onCopyAttacked(attacker, this, livesLeft); // ╨┐╨╕╤И╨╡╤В "╨╖╨░╤З╨╡╨╝ ╤В╤Л ╤Н╤В╨╛ ╨┤╨╡╨╗╨░╨╡╤И╤М?"
+// ╨╕╤Б╤З╨╡╨╖╨░╨╡╤В (╨╜╨╡ ╤В╤А╤Г╨┐), ╨╢╨╕╨╖╨╜╤М ╨╖╨░╤Б╤З╨╕╤В╨░╨╜╨░
+((ServerWorld) world).spawnParticle(ParticleTypes.PORTAL,
+getPosX(), getPosY()+1, getPosZ(), 40, 0.4,0.8,0.4, 0.3);
+LiminalManager.onCopyKilled(attacker.getUniqueID(), livesLeft); // ╤Б╤З╤С╤В╤З╨╕╨║ 3 тЖТ ╨▓╤Л╤Е╨╛╨┤
+this.remove();
+return true;
+}
+return false; // ╤Г╤А╨╛╨╜ ╤В╨╛╨╗╤М╨║╨╛ ╨╛╤В ╨╕╨│╤А╨╛╨║╨░-╨▓╨╗╨░╨┤╨╡╨╗╤М╤Ж╨░
+}
+}
+3. ╨з╨░╤В-╨Ш╨Ш ╨║╨╛╨┐╨╕╨╕ (╨Т╨░╤А╨╕╨░╨╜╤В ╨Р: intent-╤Б╨╕╤Б╤В╨╡╨╝╨░)
+╨Ъ╨╛╨┐╨╕╤П ╨░╨╜╨░╨╗╨╕╨╖╨╕╤А╤Г╨╡╤В ╨Ъ╨Р╨Ц╨Ф╨Ю╨Х ╤Б╨╛╨╛╨▒╤Й╨╡╨╜╨╕╨╡ ╨╕╨│╤А╨╛╨║╨░ ╨╕ ╨╛╤В╨▓╨╡╤З╨░╨╡╤В ╨╗╤Г╤З╤И╨╡╨╣ ╨▓╨╡╤В╨║╨╛╨╣. ╨Ч╨╜╨░╨╡╤В, ╤З╤В╨╛ ╨╛╨╜╨░ ╨┤╨▓╨╛╨╣╨╜╨╕╨║, ╤З╤В╨╛ ╤Н╤В╨╛ ╨╡╤С ╨┐╤А╨╛╤Б╤В╤А╨░╨╜╤Б╤В╨▓╨╛, ╤З╤В╨╛ ╨┤╨╗╤П ╨▓╤Л╤Е╨╛╨┤╨░ ╨╜╨░╨┤╨╛ ╨╡╤С ╤Г╨▒╨╕╤В╤М.
+public class LiminalChatAI {
+// === ╨Р╨Э╨Р╨Ы╨Ш╨Ч ╨б╨Ю╨Ю╨С╨й╨Х╨Э╨Ш╨п ╨Ш╨У╨а╨Ю╨Ъ╨Р ===
+public static void onPlayerMessage(ServerPlayerEntity player, PlayerCopyEntity copy, String raw) {
+String msg = raw.toLowerCase().trim();
+String reply = analyze(msg);
+// ╨╖╨░╨┤╨╡╤А╨╢╨║╨░ ╨╛╤В╨▓╨╡╤В╨░, ╤З╤В╨╛╨▒ ╨▒╤Л╨╗╨╛ ╨┐╨╛╤Е╨╛╨╢╨╡ ╨╜╨░ ╨┐╨╡╤З╨░╤В╨░╤О╤Й╨╡╨│╨╛ ╤З╨╡╨╗╨╛╨▓╨╡╨║╨░
+LiminalManager.queueCopyReply(player, copy.getCopyName(), reply, 20 + player.world.rand.nextInt(40));
+}
+private static String analyze(String msg) {
+// 1. ╨Ъ╨в╨Ю ╨в╨л
+if (contains(msg, "╨║╤В╨╛ ╤В╤Л", "╤В╤Л ╨║╤В╨╛", "╨║╤В╨╛ ╤Н╤В╨╛", "who are you"))
+return pick("╨п ╤Н╤В╨╛ ╤В╤Л. ╨в╨╛╤З╨╜╨╡╨╡ ╤В╨╛, ╤З╤В╨╛ ╨╛╤В ╤В╨╡╨▒╤П ╨╛╤Б╤В╨░╨╜╨╡╤В╤Б╤П.",
+"╨Ф╨▓╨╛╨╣╨╜╨╕╨║. ╨в╨▓╨╛╤П ╨║╨╛╨┐╨╕╤П. ╨а╨░╨╖╨▓╨╡ ╨╜╨╡ ╨▓╨╕╨┤╨╜╨╛ ╨┐╨╛ ╨╗╨╕╤Ж╤Г?",
+"╨в╨╛╤В ╨╢╨╡ ╨▓╨╛╨┐╤А╨╛╤Б ╤П ╨╖╨░╨┤╨░╤О ╤Б╨╡╨▒╨╡ ╨║╨░╨╢╨┤╤Л╨╣ ╤А╨░╨╖, ╨║╨╛╨│╨┤╨░ ╤В╤Л ╤Б╤О╨┤╨░ ╨┐╨╛╨┐╨░╨┤╨░╨╡╤И╤М.");
+// 2. ╨Ч╨Р╨з╨Х╨Ь / ╨Я╨Ю╨з╨Х╨Ь╨г
+if (contains(msg, "╨╖╨░╤З╨╡╨╝", "╨┐╨╛╤З╨╡╨╝╤Г", "why"))
+return pick("╨Ч╨░╤З╨╡╨╝? ╨н╤В╨╛ ╨╝╨╛╤С ╨┐╤А╨╛╤Б╤В╤А╨░╨╜╤Б╤В╨▓╨╛. ╨в╤Л ╨╖╨┤╨╡╤Б╤М ╨│╨╛╤Б╤В╤М.",
+"╨Я╨╛╤В╨╛╨╝╤Г ╤З╤В╨╛ ╤В╨░╨║ ╤А╨░╨▒╨╛╤В╨░╨╡╤В ╤Н╤В╨╛ ╨╝╨╡╤Б╤В╨╛. ╨в╤Л ╨╖╨╜╨░╨╗, ╨╜╨░ ╤З╤В╨╛ ╤И╤С╨╗.",
+"╨Р ╨╖╨░╤З╨╡╨╝ ╤В╤Л ╨▓╨╛╨╛╨▒╤Й╨╡ ╨▓╨╖╤П╨╗ ╤Н╤В╨╛╤В ╨╝╨╡╤З?");
+// 3. ╨Ъ╨Р╨Ъ ╨Т╨л╨Щ╨в╨Ш
+if (contains(msg, "╨║╨░╨║ ╨▓╤Л╨╣╤В╨╕", "╨▓╤Л╤Е╨╛╨┤", "╨║╨░╨║ ╨▓╨╕╨▒╤А╨░╤В╤Б╤П", "╨║╨░╨║ ╨▓╤Л╨▒╤А╨░╤В╤М╤Б╤П", "exit", "escape"))
+return pick("╨г╨▒╨╡╨╣ ╨╝╨╡╨╜╤П. ╨в╤А╨╕ ╤А╨░╨╖╨░. ╨в╨╛╨│╨┤╨░, ╨╝╨╛╨╢╨╡╤В ╨▒╤Л╤В╤М.",
+"╨Ю╤В╤Б╤О╨┤╨░ ╨╜╨╡╤В ╨▓╤Л╤Е╨╛╨┤╨░. ╨в╨╛╨╗╤М╨║╨╛ ╤Б╨║╨▓╨╛╨╖╤М ╨╝╨╡╨╜╤П.",
+"╨в╤Л ╨┐╤А╨░╨▓╨┤╨░ ╨┤╤Г╨╝╨░╨╡╤И╤М, ╤З╤В╨╛ ╤П ╤Б╨║╨░╨╢╤Г, ╨║╨░╨║ ╤Б╨▒╨╡╨╢╨░╤В╤М ╨╕╨╖ ╨╝╨╛╨╡╨│╨╛ ╨┤╨╛╨╝╨░?");
+// 4. ╨г╨У╨а╨Ю╨Ч╨Р
+if (contains(msg, "╤Г╨▒╤М╤О", "╤Г╨▒╨╕╤В╤М", "╤Б╨┤╨╛╤Е╨╜╨╕", "kill", "die"))
+return pick("╨Я╨╛╨┐╤А╨╛╨▒╤Г╨╣. ╨п ╨▓╤Б╤С ╤А╨░╨▓╨╜╨╛ ╨▓╨╡╤А╨╜╤Г╤Б╤М.",
+"╨г╨▒╨╕╨▓╨░╤П ╨╝╨╡╨╜╤П, ╤В╤Л ╤Г╨▒╨╕╨▓╨░╨╡╤И╤М ╤Б╨╡╨▒╤П. ╨Э╨╛ ╨┤╨░╨▓╨░╨╣, ╤П ╨┐╨╛╨┤╨╛╨╢╨┤╤Г.",
+"╨Ъ╨░╨╢╨┤╤Л╨╣ ╤А╨░╨╖ ╨╛╨┤╨╜╨╛ ╨╕ ╤В╨╛ ╨╢╨╡. ╨Э╤Г, ╨╜╨░╨┐╨░╨┤╨░╨╣.");
+// 5. ╨б╨в╨а╨Р╨е / ╨Я╨Ю╨Ь╨Ю╨й╨м
+if (contains(msg, "╨┐╨╛╨╝╨╛╨│╨╕", "╤Б╤В╤А╨░╤И╨╜╨╛", "╨▒╨╛╤О╤Б╤М", "help", "please"))
+return pick("╨Ч╨┤╨╡╤Б╤М ╤В╨╡╨▒╨╡ ╨╜╨╕╨║╤В╨╛ ╨╜╨╡ ╨┐╨╛╨╝╨╛╨╢╨╡╤В. ╨Ф╨░╨╢╨╡ ╤В╤Л ╤Б╨░╨╝.",
+"╨Я╨╛╨╖╨┤╨╜╨╛ ╨▒╨╛╤П╤В╤М╤Б╤П. ╨Э╨░╨┤╨╛ ╨▒╤Л╨╗╨╛ ╤А╨░╨╜╤М╤И╨╡.",
+"╨п ╨▒╤Л ╨┐╨╛╨╝╨╛╨│. ╨Э╨╛ ╤П ╤Н╤В╨╛ ╨╜╨╡ ╤Б╨╛╨▓╤Б╨╡╨╝ ╤П, ╨┐╨╛╨╜╨╕╨╝╨░╨╡╤И╤М?");
+// 6. ╨Я╨а╨Ш╨Т╨Х╨в╨б╨в╨Т╨Ш╨Х
+if (contains(msg, "╨┐╤А╨╕╨▓╨╡╤В", "╤Е╨░╨╣", "hello", "hi"))
+return pick("╨Я╤А╨╕╨▓╨╡╤В. ╨Ф╨░╨▓╨╜╨╛ ╨╜╨╡ ╨▓╨╕╨┤╨╡╨╗╨╕╤Б╤М. ╨е╨╛╤В╤П ╨╝╤Л ╨▓╨╕╨┤╨╡╨╗╨╕╤Б╤М ╤Б╨╡╨║╤Г╨╜╨┤╤Г ╨╜╨░╨╖╨░╨┤ ╨▓ ╨╛╤В╤А╨░╨╢╨╡╨╜╨╕╨╕.",
+"╨Ч╨┤╤А╨░╨▓╤Б╤В╨▓╤Г╨╣. ╨а╨░╤Б╨┐╨╛╨╗╨░╨│╨░╨╣╤Б╤П, ╤В╤Л ╤В╤Г╤В ╨╜╨░╨┤╨╛╨╗╨│╨╛.");
+// 7. ╨Ф╨Х╨д╨Ю╨Ы╨в тАФ ╨║╨╛╨┐╨╕╤П ╨╛╤В╨▓╨╡╤З╨░╨╡╤В ╤Г╨║╨╗╨╛╨╜╤З╨╕╨▓╨╛ + ╨╕╨╜╨╛╨│╨┤╨░ ╤Б╨░╨╝╨░ ╤Б╨╡╨▒╨╡
+return pick("╨Ш╨╜╤В╨╡╤А╨╡╤Б╨╜╨╛, ╤З╤В╨╛ ╤В╤Л ╨▓╨╛╨╛╨▒╤Й╨╡ ╤Н╤В╨╛ ╤Б╨┐╤А╨░╤И╨╕╨▓╨░╨╡╤И╤М.",
+"╨е╨╝. ╨п ╨▒╤Л ╨╛╤В╨▓╨╡╤В╨╕╨╗ ╤В╨░╨║ ╨╢╨╡, ╨▒╤Г╨┤╤М ╤П ╨╜╨░ ╤В╨▓╨╛╤С╨╝ ╨╝╨╡╤Б╤В╨╡. ╨Р ╤П ╨╕ ╨╡╤Б╤В╤М ╨╜╨░ ╤В╨▓╨╛╤С╨╝ ╨╝╨╡╤Б╤В╨╡.",
+"╨в╤Л ╤Б╨╗╤Л╤И╨╕╤И╤М ╤Н╤Е╨╛? ╨н╤В╨╛ ╤П ╨┤╤Г╨╝╨░╤О ╨▓╤Б╨╗╤Г╤Е.",
+"...");
+}
+// === ╨Ъ╨Ю╨Я╨Ш╨п ╨Я╨Ш╨и╨Х╨в ╨б╨Р╨Ь╨Р, ╨С╨Х╨Ч ╨Ч╨Р╨Я╨а╨Ю╨б╨Р (╨░╨╝╨▒╨╕╨╡╨╜╤В) ===
+public static String ambientLine(int minutesLeft) {
+if (minutesLeft <= 1) return pick("╨г╨╢╨╡ ╨┐╨╛╤З╤В╨╕. ╨з╤Г╨▓╤Б╤В╨▓╤Г╨╡╤И╤М, ╨║╨░╨║ ╨▓╤Б╤С ╤А╤Г╤И╨╕╤В╤Б╤П?",
+"╨Ю╤Б╤В╨░╨╗╨╛╤Б╤М ╨╜╨╡╨╝╨╜╨╛╨│╨╛. ╨Ф╨╗╤П ╨╛╨┤╨╜╨╛╨│╨╛ ╨╕╨╖ ╨╜╨░╤Б.");
+if (minutesLeft <= 3) return pick("╨б╤В╨╡╨╜╤Л ╨╜╨╡ ╨▓╨╡╤З╨╜╤Л. ╨Ф╨░╨╢╨╡ ╨╖╨┤╨╡╤Б╤М.",
+"╨в╤Л ╨╖╨░╨╝╨╡╤В╨╕╨╗, ╤З╤В╨╛ ╨╜╨░╤Б ╤Б╤В╨░╨╜╨╛╨▓╨╕╤В╤Б╤П ╨▒╨╛╨╗╤М╤И╨╡?");
+return pick("╨Э╨╡ ╨╛╨▒╨╛╤А╨░╤З╨╕╨▓╨░╨╣╤Б╤П ╤В╨░╨║ ╤З╨░╤Б╤В╨╛. ╨н╤В╨╛ ╨╜╨╡╨▓╨╡╨╢╨╗╨╕╨▓╨╛.",
+"╨Ъ╤А╨░╤Б╨╕╨▓╨╛╨╡ ╨╝╨╡╤Б╤В╨╛, ╨┐╤А╨░╨▓╨┤╨░? ╨п ╨╡╨│╨╛ ╨╜╨╡ ╨▓╤Л╨▒╨╕╤А╨░╨╗.",
+"╨в╤Л ╤Г╨╢╨╡ ╨┐╨╛╨╜╤П╨╗, ╤З╤В╨╛ ╤Н╤В╨╛ ╨╜╨╡ ╨▓╤Л╤Е╨╛╨┤?");
+}
+// === ╨а╨Х╨Р╨Ъ╨ж╨Ш╨п ╨Э╨Р ╨Р╨в╨Р╨Ъ╨г ===
+public static void onCopyAttacked(ServerPlayerEntity player, PlayerCopyEntity copy, int livesLeft) {
+String line = livesLeft > 0
+? pick("╨Ч╨░╤З╨╡╨╝ ╤В╤Л ╤Н╤В╨╛ ╨┤╨╡╨╗╨░╨╡╤И╤М?", "╨Ч╨░ ╤З╤В╨╛? ╨п ╨╢╨╡ ╤Н╤В╨╛ ╤В╤Л.", "╨Х╤Й╤С " + livesLeft + ". ╨Ш ╤В╤Л ╤Б╨▓╨╛╨▒╨╛╨┤╨╡╨╜. ╨Ш╨╗╨╕ ╨╜╨╡╤В.")
+: pick("╨Э╤Г ╨▓╨╛╤В ╨╕ ╨▓╤Б╤С... ╨╜╨╛ ╤В╨░╨║ ╨╗╨╕ ╤Н╤В╨╛?", "╨в╤Л ╨┐╨╛╨▒╨╡╨┤╨╕╨╗ ╤Б╨╡╨▒╤П. ╨Я╨╛╨╖╨┤╤А╨░╨▓╨╗╤П╤О.");
+LiminalManager.sendCopyMessage(player, copy.getCopyName(), line);
+}
+private static boolean contains(String s, String... keys) {
+for (String k : keys) if (s.contains(k)) return true;
+return false;
+}
+private static final Random R = new Random();
+private static String pick(String... opts) { return opts[R.nextInt(opts.length)]; }
+// === ╨е╨г╨Ъ ╨Ф╨Ы╨п ╨Т╨Р╨а╨Ш╨Р╨Э╨в╨Р ╨С (╨╜╨░╤Б╤В╨╛╤П╤Й╨╕╨╣ LLM) ===
+// ╨Ч╨░╨╝╨╡╨╜╨╕ analyze() ╨╜╨░ ╨░╤Б╨╕╨╜╤Е╤А╨╛╨╜╨╜╤Л╨╣ ╨▓╤Л╨╖╨╛╨▓ ╨▓╨╜╨╡╤И╨╜╨╡╨│╨╛ API:
+// CompletableFuture.supplyAsync(() -> callLLM(systemPrompt, msg)).thenAccept(reply -> queueCopyReply(...));
+// systemPrompt: "╨в╤Л ╨┤╨▓╨╛╨╣╨╜╨╕╨║ ╨╕╨│╤А╨╛╨║╨░ ╨▓ ╨║╨╛╤И╨╝╨░╤А╨╜╨╛╨╝ ╨╕╨╖╨╝╨╡╤А╨╡╨╜╨╕╨╕. ╨в╤Л ╨╖╨╜╨░╨╡╤И╤М ╤З╤В╨╛ ╤В╤Л ╨║╨╛╨┐╨╕╤П..."
+}
+╨Я╨╡╤А╨╡╤Е╨▓╨░╤В ╤Б╨╛╨╛╨▒╤Й╨╡╨╜╨╕╨╣ ╨╕╨│╤А╨╛╨║╨░
+@SubscribeEvent
+public void onChat(ServerChatEvent e) {
+ServerPlayerEntity player = e.getPlayer();
+if (!LiminalManager.isInside(player)) return;
+// ╨╕╨│╤А╨╛╨║ ╨Т ╨Ы╨Ш╨Ь╨Ш╨Э╨Р╨Ы╨Х: ╨╡╨│╨╛ ╤Б╨╛╨╛╨▒╤Й╨╡╨╜╨╕╨╡ ╨Э╨Х ╤Г╤Е╨╛╨┤╨╕╤В ╨▓ ╨╛╨▒╤Й╨╕╨╣ ╤З╨░╤В, ╨╡╨│╨╛ ╤З╨╕╤В╨░╨╡╤В ╨║╨╛╨┐╨╕╤П
+e.setCanceled(true);
+PlayerCopyEntity copy = LiminalManager.getActiveCopy(player.getUniqueID());
+if (copy != null) LiminalChatAI.onPlayerMessage(player, copy, e.getMessage());
+}
+e.setCanceled(true)
+= ╤Б╨╛╨╛╨▒╤Й╨╡╨╜╨╕╨╡ ╨╕╨│╤А╨╛╨║╨░ ╨╜╨╡ ╨▓╨╕╨┤╨╕╤В ╨╜╨╕╨║╤В╨╛ ╨╜╨░ ╤Б╨╡╤А╨▓╨╡╤А╨╡, ╤В╨╛╨╗╤М╨║╨╛ ╨║╨╛╨┐╨╕╤П ┬л╤Б╨╗╤Л╤И╨╕╤В┬╗ ╨╕ ╨╛╤В╨▓╨╡╤З╨░╨╡╤В. ╨Я╨╛╨╗╨╜╨░╤П ╨╕╨╖╨╛╨╗╤П╤Ж╨╕╤П ╨╗╨╕╨╝╨╕╨╜╨░╨╗╨░.
+4. ╨а╨░╨╖╤А╤Г╤И╨╡╨╜╨╕╨╡ ╨╝╨╕╤А╨░ ╨Я╨Ю ╨Т╨б╨Х╨Ь╨г ╨Ш╨Ч╨Ь╨Х╨а╨Х╨Э╨Ш╨о (╨╜╨╡ ╨┐╨╛╨┤ ╨╜╨╛╨│╨░╨╝╨╕)
+╨Я╨╡╤А╨╡╨┐╨╕╤Б╤Л╨▓╨░╨╡╨╝
+rotTick
+╨┐╨╛╨╗╨╜╨╛╤Б╤В╤М╤О. ╨в╨╡╨┐╨╡╤А╤М ╤А╨░╤Б╨┐╨░╨┤ ╨╕╨┤╤С╤В ╨▓
+╤Б╨╗╤Г╤З╨░╨╣╨╜╤Л╤Е ╤В╨╛╤З╨║╨░╤Е ╨▓╤Б╨╡╨│╨╛ ╨╕╨╖╨╝╨╡╤А╨╡╨╜╨╕╤П
+╨▓ ╤А╨░╨┤╨╕╤Г╤Б╨╡ 100, ╤Б ╤А╨░╨╖╨╜╤Л╨╝╨╕ ╤В╨╕╨┐╨░╨╝╨╕ ╨║╨░╤В╨░╤Б╤В╤А╨╛╤Д, ╨╕
+╤Г╤Б╨╕╨╗╨╕╨▓╨░╨╡╤В╤Б╤П ╤Б╨╛ ╨▓╤А╨╡╨╝╨╡╨╜╨╡╨╝
+(6 ╨╝╨╕╨╜╤Г╤В).
+private static void worldCollapseTick(ServerWorld clone, State st) {
+Random r = clone.rand;
+float progress = (float) st.ticks / st.durationTicks; // 0.0 тЖТ 1.0 ╨╖╨░ 6 ╨╝╨╕╨╜╤Г╤В
+int events = 1 + (int)(progress * 8); // ╨║ ╨║╨╛╨╜╤Ж╤Г ╨┤╨╛ 9 ╨║╨░╤В╨░╤Б╤В╤А╨╛╤Д ╨╖╨░ ╤В╨╕╨║ ╤А╨░╤Б╨┐╨░╨┤╨░
+for (int i = 0; i < events; i++) {
+// ╤Б╨╗╤Г╤З╨░╨╣╨╜╨░╤П ╤В╨╛╤З╨║╨░ ╨Т╨Ю ╨Т╨б╨Б╨Ь ╨╕╨╖╨╝╨╡╤А╨╡╨╜╨╕╨╕, ╨╜╨╡ ╤Г ╨╕╨│╤А╨╛╨║╨░
+double ang = r.nextDouble() * Math.PI * 2;
+double rad = r.nextDouble() * 95; // ╨▓ ╨┐╤А╨╡╨┤╨╡╨╗╨░╤Е ╤Б╤В╨╡╨╜╤Л
+int cx = st.center.getX() + (int)(Math.cos(ang) * rad);
+int cz = st.center.getZ() + (int)(Math.sin(ang) * rad);
+int cy = clone.getHeight(Heightmap.Type.WORLD_SURFACE, cx, cz);
+BlockPos p = new BlockPos(cx, cy, cz);
+int type = r.nextInt(100);
+if (type < 30) {
+carveChasm(clone, p, r); // ╨╛╨│╤А╨╛╨╝╨╜╨░╤П ╨┐╤А╨╛╨┐╨░╤Б╤В╤М ╨▓ ╨┐╤Г╤Б╤В╨╛╤В╤Г
+} else if (type < 55) {
+collapseColumn(clone, p, r); // ╨▒╨╗╨╛╨║╨╕ ╨╛╤Б╤Л╨┐╨░╤О╤В╤Б╤П ╨▓╨╜╨╕╨╖ ╨║╨░╨║ ╨│╤А╨░╨▓╨╕╨╣
+} else if (type < 75) {
+rotPatch(clone, p, r); // ╨╗╨╛╨║╨░╨╗╤М╨╜╨╛╨╡ ╨│╨╜╨╕╨╡╨╜╨╕╨╡ (╤Б╤В╨░╤А╨╛╨╡ ╨┐╨╛╨▓╨╡╨┤╨╡╨╜╨╕╨╡)
+} else if (type < 90 && progress > 0.4) {
+tntBurst(clone, p, r); // ╤Б╨╗╤Г╤З╨░╨╣╨╜╤Л╨╣ ╨▓╨╖╤А╤Л╨▓ ╨в╨Э╨в
+} else if (progress > 0.6) {
+voidHole(clone, p, r); // ╨┤╤Л╤А╨░ ╨╜╨░╤Б╨║╨▓╨╛╨╖╤М, ╨┤╨░╨╢╨╡ ╨▒╨╡╨┤╤А╨╛╨║
+}
+}
+}
+/** ╨Ю╨│╤А╨╛╨╝╨╜╨░╤П ╨┐╤А╨╛╨┐╨░╤Б╤В╤М: ╨▓╤Л╤А╨╡╨╖╨░╨╡╨╝ ╤Ж╨╕╨╗╨╕╨╜╨┤╤А ╨▓╨╜╨╕╨╖ ╨▓ ╨┐╤Г╤Б╤В╨╛╤В╤Г. */
+private static void carveChasm(ServerWorld w, BlockPos c, Random r) {
+int radius = 3 + r.nextInt(6); // 3-8 ╨▒╨╗╨╛╨║╨╛╨▓
+int depth = 20 + r.nextInt(40); // ╨│╨╗╤Г╨▒╨╛╨║╨╛ ╨▓╨╜╨╕╨╖
+for (int x = -radius; x <= radius; x++)
+for (int z = -radius; z <= radius; z++) {
+if (x*x + z*z > radius*radius) continue;
+for (int y = 0; y < depth; y++) {
+BlockPos bp = c.add(x, -y, z);
+if (w.getBlockState(bp).getBlock() == Blocks.BARRIER) continue; // ╤Б╤В╨╡╨╜╤Г ╨╜╨╡ ╤В╤А╨╛╨│╨░╨╡╨╝
+w.setBlockState(bp, Blocks.AIR.getDefaultState(), 18);
+}
+}
+w.playSound(null, c, SoundEvents.ENTITY_GENERIC_EXPLODE, SoundCategory.BLOCKS, 2f, 0.3f);
+}
+/** ╨С╨╗╨╛╨║╨╕ ╨╛╤Б╤Л╨┐╨░╤О╤В╤Б╤П ╨▓╨╜╨╕╨╖ ╨║╨░╨║ ╨│╤А╨░╨▓╨╕╨╣ (╤А╨╡╨░╨╗╤М╨╜╤Л╨╡ ╨┐╨░╨┤╨░╤О╤Й╨╕╨╡ ╨▒╨╗╨╛╨║╨╕). */
+private static void collapseColumn(ServerWorld w, BlockPos c, Random r) {
+int radius = 2 + r.nextInt(4);
+for (int x = -radius; x <= radius; x++)
+for (int z = -radius; z <= radius; z++) {
+BlockPos bp = c.add(x, 0, z);
+BlockState bs = w.getBlockState(bp);
+if (bs.isAir() || bs.getBlock() == Blocks.BARRIER || bs.getBlock() == Blocks.BEDROCK) continue;
+// ╤Б╨┐╨░╨▓╨╜╨╕╨╝ ╤А╨╡╨░╨╗╤М╨╜╤Л╨╣ ╨┐╨░╨┤╨░╤О╤Й╨╕╨╣ ╨▒╨╗╨╛╨║ тЖТ ╨╛╨╜ ╨┐╨╛╨╗╨╡╤В╨╕╤В ╨▓ ╨┐╤Г╤Б╤В╨╛╤В╤Г
+FallingBlockEntity fb = new FallingBlockEntity(w, bp.getX()+0.5, bp.getY(), bp.getZ()+0.5, bs);
+fb.fallTime = 1;
+w.addEntity(fb);
+w.setBlockState(bp, Blocks.AIR.getDefaultState(), 18);
+}
+}
+/** ╨Ф╤Л╤А╨░ ╨╜╨░╤Б╨║╨▓╨╛╨╖╤М, ╨▓╨║╨╗╤О╤З╨░╤П ╨▒╨╡╨┤╤А╨╛╨║ тАФ ╨┤╨╛ ╤Б╨░╨╝╨╛╨│╨╛ ╨╜╨╕╨╖╨░. */
+private static void voidHole(ServerWorld w, BlockPos c, Random r) {
+int radius = 2 + r.nextInt(3);
+for (int x = -radius; x <= radius; x++)
+for (int z = -radius; z <= radius; z++) {
+if (x*x + z*z > radius*radius) continue;
+for (int y = c.getY(); y >= 0; y--) {
+BlockPos bp = new BlockPos(c.getX()+x, y, c.getZ()+z);
+if (w.getBlockState(bp).getBlock() == Blocks.BARRIER) continue;
+w.setBlockState(bp, Blocks.AIR.getDefaultState(), 18); // ╨┤╨░╨╢╨╡ ╨▒╨╡╨┤╤А╨╛╨║ ╨╕╤Б╤З╨╡╨╖╨░╨╡╤В
+}
+}
+}
+/** ╨б╨╗╤Г╤З╨░╨╣╨╜╤Л╨╣ ╨▓╨╖╤А╤Л╨▓ ╨в╨Э╨в. */
+private static void tntBurst(ServerWorld w, BlockPos c, Random r) {
+// ╤А╨╡╨░╨╗╤М╨╜╤Л╨╣ ╨▓╨╖╤А╤Л╨▓, ╨╗╨╛╨╝╨░╨╡╤В ╨▒╨╗╨╛╨║╨╕
+w.createExplosion(null, c.getX(), c.getY(), c.getZ(), 3.0F + r.nextFloat()*2,
+Explosion.Mode.DESTROY);
+}
+/** ╨б╤В╨░╤А╨╛╨╡ ╨╗╨╛╨║╨░╨╗╤М╨╜╨╛╨╡ ╨│╨╜╨╕╨╡╨╜╨╕╨╡ (grassтЖТdirtтЖТsoul sand). */
+private static void rotPatch(ServerWorld w, BlockPos c, Random r) {
+for (BlockPos p : BlockPos.getAllInBoxMutable(c.add(-3,-2,-3), c.add(3,2,3))) {
+BlockState bs = w.getBlockState(p);
+Block next = ROT_CHAIN.get(bs.getBlock());
+if (next != null && r.nextFloat() < 0.3f) w.setBlockState(p, next.getDefaultState(), 18);
+}
+}
+╨в╨╡╨┐╨╡╤А╤М ╨╝╨╕╤А ╤А╤Г╤И╨╕╤В╤Б╤П
+╨▓╨╡╨╖╨┤╨╡
+: ╨┐╤А╨╛╨┐╨░╤Б╤В╨╕, ╨╛╤Б╤Л╨┐╨░╤О╤Й╨╕╨╡╤Б╤П ╨║╨╛╨╗╨╛╨╜╨╜╤Л (╤А╨╡╨░╨╗╤М╨╜╤Л╨╡
+FallingBlockEntity
+), ╨┤╤Л╤А╤Л ╤Б╨║╨▓╨╛╨╖╤М ╨▒╨╡╨┤╤А╨╛╨║, ╨▓╨╖╤А╤Л╨▓╤Л ╨в╨Э╨в. ╨Ш ╤З╨╡╨╝ ╨▒╨╗╨╕╨╢╨╡ ╨║ ╨║╨╛╨╜╤Ж╤Г 6 ╨╝╨╕╨╜╤Г╤В, ╤В╨╡╨╝ ╤З╨░╤Й╨╡ ╨╕ ╨╢╤С╤Б╤В╤З╨╡ (
+progress
+╤А╨░╤Б╤В╤С╤В). ╨Ъ ╤Д╨╕╨╜╨░╨╗╤Г ╨╕╨╖╨╝╨╡╤А╨╡╨╜╨╕╨╡ ╨▒╤Г╨║╨▓╨░╨╗╤М╨╜╨╛ ╤А╨░╨╖╨▓╨░╨╗╨╕╨▓╨░╨╡╤В╤Б╤П ╨╜╨░ ╨║╤Г╤Б╨║╨╕.
+5. ╨Э╨╛╨▓╨░╤П ╤Б╤В╨╡╨╣╤В-╨╝╨░╤И╨╕╨╜╨░: 6 ╨╝╨╕╨╜╤Г╤В, ╨║╨╛╨┐╨╕╨╕, ╤Н╤Б╨║╨░╨╗╨░╤Ж╨╕╤П
+public static class State {
+public UUID victim;
+public BlockPos center, realReturnPos;
+public int ticks = 0;
+public int durationTicks = 6 * 60 * 20; // 6 ╨╝╨╕╨╜╤Г╤В
+public int copyKills = 0; // ╨╜╨░╨┤╨╛ 3
+public int copiesAlive = 0;
+public boolean cloneReady = false, frozen = false, markDeadOnRejoin = false;
+public UUID activeCopyId = null;
+}
+public static void tick(ServerWorld clone) {
+for (State st : STATES.values()) {
+if (!st.cloneReady) continue;
+ServerPlayerEntity vp = clone.getServer().getPlayerList().getPlayerByUUID(st.victim);
+if (vp == null) continue;
+st.ticks++;
+float progress = (float) st.ticks / st.durationTicks;
+int minutesLeft = (st.durationTicks - st.ticks) / (60 * 20);
+// ╨╕╤Б╤В╨╛╤Й╨╡╨╜╨╕╨╡
+if (st.ticks % 60 == 0 && vp.getHealth() > 1f)
+vp.attackEntityFrom(DamageSource.WITHER, 1f);
+// === ╨Ъ╨Ю╨Я╨Ш╨п: ╤Б╨┐╨░╨▓╨╜ 100% ╨╡╤Б╨╗╨╕ ╨╜╨╡╤В ╨░╨║╤В╨╕╨▓╨╜╨╛╨╣ ===
+// ╤З╨╡╨╝ ╨▒╨╗╨╕╨╢╨╡ ╨║ ╤Б╨╝╨╡╤А╤В╨╕ (╨▒╨╛╨╗╤М╤И╨╡ copyKills), ╤В╨╡╨╝ ╨а╨Х╨Ц╨Х ╨┐╨╛╤П╨▓╨╗╤П╨╡╤В╤Б╤П
+int spawnDelay = 100 + st.copyKills * 200; // 5╤Б / 15╤Б / 25╤Б ╨╝╨╡╨╢╨┤╤Г ╨┐╨╛╤П╨▓╨╗╨╡╨╜╨╕╤П╨╝╨╕
+if (st.copiesAlive == 0 && st.copyKills < 3 && st.ticks % spawnDelay == 0) {
+spawnPlayerCopy(clone, st, vp);
+// ╨╕╨╜╨╛╨│╨┤╨░ ╨Ф╨Т╨Х ╤Б╤А╨░╨╖╤Г (╨┐╨╛╤Б╨╗╨╡ ╨┐╨╡╤А╨▓╨╛╨╣ ╤Б╨╝╨╡╤А╤В╨╕)
+if (st.copyKills >= 1 && clone.rand.nextFloat() < 0.4f)
+spawnPlayerCopy(clone, st, vp);
+}
+// === ╨░╨╝╨▒╨╕╨╡╨╜╤В-╤Б╨╛╨╛╨▒╤Й╨╡╨╜╨╕╤П ╨║╨╛╨┐╨╕╨╕ ===
+if (st.activeCopyId != null && st.ticks % (8 * 20) == 0)
+sendCopyMessage(vp, getCopyNameFor(st), LiminalChatAI.ambientLine(minutesLeft));
+// === ╤А╨░╨╖╤А╤Г╤И╨╡╨╜╨╕╨╡ ╨╝╨╕╤А╨░ (╤Г╤Б╨╕╨╗╨╕╨▓╨░╨╡╤В╤Б╤П) ===
+if (st.ticks % 20 == 0) worldCollapseTick(clone, st);
+// === ╨н╨б╨Ъ╨Р╨Ы╨Р╨ж╨Ш╨п ╨▓╨╛ ╨▓╤В╨╛╤А╨╛╨╣ ╨┐╨╛╨╗╨╛╨▓╨╕╨╜╨╡: ghost-╨╝╨╛╨▒╤Л, ╨║╨╗╨╛╨╜╤Л ╤Б ╨░╨╗╨╝╨░╨╖╨║╨╛╨╣ ===
+if (progress > 0.5 && st.ticks % (15 * 20) == 0)
+spawnAnomaly(clone, st, vp, progress);
+// ╨╖╨░╨╝╨╛╤А╨╛╨╖╨║╨░ (╤Б╨╜╨╕╨╝╨░╨╡╤В╤Б╤П ╤З╨╡╤А╨╡╨╖ N ╤Б╨╡╨║╤Г╨╜╨┤ ╨┐╨╛╤Б╨╗╨╡ ╨▓╤Е╨╛╨┤╨░, ╤З╤В╨╛╨▒ ╨╝╨╛╨╢╨╜╨╛ ╨▒╤Л╨╗╨╛ ╨▒╨╡╨│╨░╤В╤М)
+if (st.frozen && st.ticks > 60) { unfreeze(vp); st.frozen = false; }
+else if (st.frozen) { vp.setMotion(0, vp.getMotion().y, 0); vp.velocityChanged = true; }
+// === ╨Т╨л╨е╨Ю╨Ф: ╤Г╨▒╨╕╨╗ ╨║╨╛╨┐╨╕╤О 3 ╤А╨░╨╖╨░ ===
+if (st.copyKills >= 3) { exit(vp, st, false); }
+// ╨╕╨╗╨╕ ╤В╨░╨╣╨╝╨╡╤А ╨╕╤Б╤В╤С╨║ (╨╜╨╡ ╨▓╤Л╨╢╨╕╨╗)
+else if (st.ticks >= st.durationTicks) { exit(vp, st, true); }
+}
+}
+/** ╨Р╨╜╨╛╨╝╨░╨╗╨╕╨╕ ╨▓╤В╨╛╤А╨╛╨╣ ╨┐╨╛╨╗╨╛╨▓╨╕╨╜╤Л: ghost-╨╝╨╛╨▒╤Л + ╨║╨╗╨╛╨╜ ╨┤╤А╤Г╨│╨╛╨│╨╛ ╨╕╨│╤А╨╛╨║╨░ ╤Б ╨╝╨╡╤З╨╛╨╝ ╨╕ ╨░╨╗╨╝╨░╨╖╨║╨╛╨╣. */
+private static void spawnAnomaly(ServerWorld w, State st, ServerPlayerEntity vp, float progress) {
+int roll = w.rand.nextInt(100);
+if (roll < 40) {
+// ghost-╨▓╨╡╤А╤Б╨╕╤П ╤Б╨╗╤Г╤З╨░╨╣╨╜╨╛╨│╨╛ ╨▓╤А╨░╨╢╨┤╨╡╨▒╨╜╨╛╨│╨╛ ╨╝╨╛╨▒╨░ (╨┐╨╛╨╗╤Г╨┐╤А╨╛╨╖╤А╨░╤З╨╜╤Л╨╣, ╤Б╨▓╨╡╤В╤П╤Й╨╕╨╣╤Б╤П)
+spawnGhostMob(w, st, vp);
+} else if (roll < 70) {
+// ╨║╨╗╨╛╨╜ ╨Ф╨а╨г╨У╨Ю╨У╨Ю ╨╕╨│╤А╨╛╨║╨░ ╤Б ╤Б╨╡╤А╨▓╨╡╤А╨░, ╨▓ ╨░╨╗╨╝╨░╨╖╨╜╨╛╨╣ ╨▒╤А╨╛╨╜╨╡ ╨╕ ╤Б ╨╝╨╡╤З╨╛╨╝
+spawnArmedPlayerClone(w, st, vp);
+sendCopyMessage(vp, "???", pick("╨Ю╨╜ ╤В╨╛╨╢╨╡ ╨▒╤Л╨╗ ╨╖╨┤╨╡╤Б╤М. ╨в╨╡╨┐╨╡╤А╤М ╨╛╨╜ ╤З╨░╤Б╤В╤М ╤Н╤В╨╛╨│╨╛.",
+"╨г╨╖╨╜╨░╤С╤И╤М ╨╡╨│╨╛? ╨Ю╨╜ ╨╜╨╡ ╨▓╤Л╨▒╤А╨░╨╗╤Б╤П."));
+} else {
+// ╨┐╤А╨╛╤Б╤В╨╛ ╨╖╨╗╨╛╨▓╨╡╤Й╨╡╨╡ ╤Б╨╛╨╛╨▒╤Й╨╡╨╜╨╕╨╡ + ╨│╤Г╨╗
+sendCopyMessage(vp, getCopyNameFor(st), pick("╨Ю╤Б╤В╨░╨╗╨╛╤Б╤М ╨╝╨░╨╗╨╛ ╨▓╤А╨╡╨╝╨╡╨╜╨╕.",
+"╨б╤В╨╡╨╜╤Л ╨▒╨╛╨╗╤М╤И╨╡ ╨╜╨╡ ╨┤╨╡╤А╨╢╨░╤В.", "╨в╤Л ╤Б╨╗╤Л╤И╨╕╤И╤М ╤Н╤В╨╛? ╨Ю╨╜╨╛ ╨╕╨┤╤С╤В."));
+w.playSound(null, vp.getPosition(), SoundEvents.AMBIENT_CAVE, SoundCategory.HOSTILE, 1f, 0.2f);
+}
+}
+/** ╨Ъ╨╗╨╛╨╜ ╨┤╤А╤Г╨│╨╛╨│╨╛ ╨╕╨│╤А╨╛╨║╨░: ╤Б╨║╨╕╨╜ ╤Б╨╗╤Г╤З╨░╨╣╨╜╨╛╨│╨╛ ╨╕╨│╤А╨╛╨║╨░ ╤Б╨╡╤А╨▓╨╡╤А╨░, ╨░╨╗╨╝╨░╨╖╨║╨░ + ╨╝╨╡╤З, ╨▓╤А╨░╨╢╨┤╨╡╨▒╨╜╤Л╨╣. */
+private static void spawnArmedPlayerClone(ServerWorld w, State st, ServerPlayerEntity vp) {
+PlayerCopyEntity clone = ModEntities.PLAYER_COPY.get().create(w);
+if (clone == null) return;
+// ╨▒╨╡╤А╤С╨╝ ╤Б╨╗╤Г╤З╨░╨╣╨╜╨╛╨│╨╛ ╨Ф╨а╨г╨У╨Ю╨У╨Ю ╨╕╨│╤А╨╛╨║╨░ ╤Б╨╡╤А╨▓╨╡╤А╨░ ╨┤╨╗╤П ╤Б╨║╨╕╨╜╨░
+List<ServerPlayerEntity> others = w.getServer().getPlayerList().getPlayers();
+ServerPlayerEntity skinSrc = others.get(w.rand.nextInt(others.size()));
+clone.setSkinOwner(skinSrc.getUniqueID());
+clone.setCopyName(skinSrc.getGameProfile().getName());
+// ╨░╨╗╨╝╨░╨╖╨╜╨░╤П ╨▒╤А╨╛╨╜╤П + ╨╝╨╡╤З
+clone.setItemStackToSlot(EquipmentSlotType.HEAD, new ItemStack(Items.DIAMOND_HELMET));
+clone.setItemStackToSlot(EquipmentSlotType.CHEST, new ItemStack(Items.DIAMOND_CHESTPLATE));
+clone.setItemStackToSlot(EquipmentSlotType.LEGS, new ItemStack(Items.DIAMOND_LEGGINGS));
+clone.setItemStackToSlot(EquipmentSlotType.FEET, new ItemStack(Items.DIAMOND_BOOTS));
+clone.setItemStackToSlot(EquipmentSlotType.MAINHAND, new ItemStack(Items.DIAMOND_SWORD));
+double a = w.rand.nextDouble()*Math.PI*2;
+clone.setLocationAndAngles(vp.getPosX()+Math.cos(a)*15, vp.getPosY(), vp.getPosZ()+Math.sin(a)*15, 0,0);
+w.addEntity(clone);
+}
+6. ╨Я╨╛╨╗╨╜╨░╤П ╨│╨╡╨╜╨╡╤А╨░╤Ж╨╕╤П ╨╝╨╕╤А╨░
+╨в╤Л ╨┐╤А╨╛╤Б╨╕╨╗ ┬л╨╝╨╕╤А ╨│╨╡╨╜╨╡╤А╨╕╤А╤Г╨╡╤В╤Б╤П ╨┐╨╛╨╗╨╜╨╛╤Б╤В╤М╤О┬╗. ╨б╨╡╨╣╤З╨░╤Б ╤Г ╨╜╨░╤Б void + ╨║╨╛╨┐╨╕╤П ╨▒╨╗╨╛╨║╨╛╨▓. ╨Х╤Б╨╗╨╕ ╤Е╨╛╤З╨╡╤И╤М ╤З╤В╨╛╨▒╤Л ╨╖╨░ ╨║╨╛╨┐╨╕╨╡╨╣ ╨▒╤Л╨╗
+╨╜╨░╤Б╤В╨╛╤П╤Й╨╕╨╣ ╤Б╨│╨╡╨╜╨╡╤А╨╕╤А╨╛╨▓╨░╨╜╨╜╤Л╨╣ ╨╝╨╕╤А
+(╨░ ╨╜╨╡ ╨┐╤Г╤Б╤В╨╛╤В╨░ ╨╖╨░ ╤Б╤В╨╡╨╜╨╛╨╣), ╨▓╨╡╤А╨╜╨╕ noise-╨│╨╡╨╜╨╡╤А╨░╤В╨╛╤А ╨╜╨░ ╤Б╨╕╨┤╨╡ ╨╛╨▓╨╡╤А╨▓╨╛╤А╨╗╨┤╨░ ╨Т datapack, ╨╜╨╛ ╨╛╤Б╤В╨░╨▓╤М ╤Б╤В╨╡╨╜╤Г ╨║╨░╨║ ╨│╤А╨░╨╜╨╕╤Ж╤Г:
+// data/titanforge/dimension/liminal.json тАФ ╨Я╨Ю╨Ы╨Э╨Р╨п ╨│╨╡╨╜╨╡╤А╨░╤Ж╨╕╤П
+{
+"type": "titanforge:liminal_type",
+"generator": {
+"type": "minecraft:noise",
+"seed": 0,
+"settings": "minecraft:overworld",
+"biome_source": { "type": "minecraft:vanilla_layered", "seed": 0, "large_biomes": false }
+}
+}
+╨в╨╛╨│╨┤╨░ ╨╕╨╖╨╝╨╡╤А╨╡╨╜╨╕╨╡ ╨│╨╡╨╜╨╡╤А╨╕╤В ╨┐╨╛╨╗╨╜╨╛╤Ж╨╡╨╜╨╜╤Л╨╣ ╨╗╨░╨╜╨┤╤И╨░╤Д╤В (╨║╨░╨║ ╨╛╨▓╨╡╤А╨▓╨╛╤А╨╗╨┤), ╨░ ╨║╨╛╨┐╨╕╤А ╨┐╨╛╨▓╨╡╤А╤Е ╨╜╨░╨║╨╗╨░╨┤╤Л╨▓╨░╨╡╤В ╨┐╨╛╤Б╤В╤А╨╛╨╣╨║╨╕ ╨╕╨│╤А╨╛╨║╨░. ╨б╤В╨╡╨╜╨░ ╨╜╨░ r=100 ╨╛╤Б╤В╨░╤С╤В╤Б╤П ╨┐╤Б╨╕╤Е╨╛╨╗╨╛╨│╨╕╤З╨╡╤Б╨║╨╛╨╣ ╨│╤А╨░╨╜╨╕╤Ж╨╡╨╣. ╨а╨░╨╖╤А╤Г╤И╨╡╨╜╨╕╨╡ (╨┐╤А╨╛╨┐╨░╤Б╤В╨╕, ╨в╨Э╨в) ╤А╨░╨▒╨╛╤В╨░╨╡╤В ╨┐╨╛ ╤Н╤В╨╛╨╝╤Г ╤Б╨│╨╡╨╜╨╡╤А╨╡╨╜╨╜╨╛╨╝╤Г ╨╝╨╕╤А╤Г. ╨г╤З╤В╨╕: ╨┐╨╛╨╗╨╜╨░╤П ╨│╨╡╨╜╨╡╤А╨░╤Ж╨╕╤П = ╨┤╨╛╤А╨╛╨╢╨╡, ╤З╨╡╨╝ void, ╤Б╨╗╨╡╨┤╨╕ ╨╖╨░ ╨╜╨░╨│╤А╤Г╨╖╨║╨╛╨╣.
+╨з╤В╨╛ ╨╛╤Б╤В╨░╨╗╨╛╤Б╤М ╨╜╨░ ╤В╨╡╨▒╤П
+╨Ч╨░╤А╨╡╨│╨░╤В╤М
+PlayerCopyEntity
+╨▓
+ModEntities
++ ╤А╨╡╨╜╨┤╨╡╤А╨╡╤А ╨╜╨░
+PlayerModel
+(╨║╨░╨║ ╤Г ╤В╨╡╨╜╨╕).
+╨Э╨░╨┐╨╕╤Б╨░╤В╤М
+PlayerCopyStalkGoal
+(╨╝╨╛╨╢╨╜╨╛ ╨▓╨╖╤П╤В╤М
+ShadowStalkGoal
+╨╕╨╖ Private (
+https://app.clickup.com/90121880654/docs/2kxuxh2e-512/2kxuxh2e-232
+) ╨┐╨╛╤З╤В╨╕ ╨▒╨╡╨╖ ╨╕╨╖╨╝╨╡╨╜╨╡╨╜╨╕╨╣).
+╨Ь╨╡╤В╨╛╨┤╤Л-╤Е╨╡╨╗╨┐╨╡╤А╤Л:
+spawnPlayerCopy
+,
+spawnGhostMob
+,
+queueCopyReply
+(╨╛╤З╨╡╤А╨╡╨┤╤М ╨╛╤В╨╗╨╛╨╢╨╡╨╜╨╜╤Л╤Е ╨╛╤В╨▓╨╡╤В╨╛╨▓),
+getActiveCopy
+,
+onCopyKilled
+.
+╨г╨▒╤А╨░╤В╤М ╤Б╤В╨░╤А╤Л╨╣
+StunZombieEntity
+╨╕╨╖ ╤Б╨┐╨░╨▓╨╜╨░ (╨╛╤Б╤В╨░╨▓╨╕╤В╤М ╨▓ ╨▒╨╡╨╗╨╛╨╝ ╤Б╨┐╨╕╤Б╨║╨╡ ╤Б╨┐╨░╨▓╨╜-╨▒╨╗╨╛╨║╨╡╤А╨░
+PlayerCopyEntity
+).
+╨а╨╡╤И╨╕╤В╤М:
+intent-╨Ш╨Ш (╨Т╨░╤А╨╕╨░╨╜╤В ╨Р, ╨│╨╛╤В╨╛╨▓)
+╨╕╨╗╨╕ ╨▓╨╛╤В╨║╨╜╤Г╤В╤М
+LLM API (╨Т╨░╤А╨╕╨░╨╜╤В ╨С)
+╨▓
+analyze()
+.
+╨з╨╡╤Б╤В╨╜╤Л╨╣ ╤Б╤В╨░╤В╤Г╤Б
+╨з╨░╤В-╤Д╨╕╨║╤Б, ╨║╨╛╨┐╨╕╤П ╨▓╨╝╨╡╤Б╤В╨╛ ╨╖╨╛╨╝╨▒╨╕, intent-╨Ш╨Ш, ┬л╨╖╨░╤З╨╡╨╝ ╤В╤Л ╤Н╤В╨╛ ╨┤╨╡╨╗╨░╨╡╤И╤М┬╗, ╤Г╨▒╨╕╤В╤М 3 ╤А╨░╨╖╨░, ╤Н╤Б╨║╨░╨╗╨░╤Ж╨╕╤П, ghost-╨╝╨╛╨▒╤Л, ╨║╨╗╨╛╨╜ ╤Б ╨░╨╗╨╝╨░╨╖╨║╨╛╨╣, ╤А╨░╨╖╤А╤Г╤И╨╡╨╜╨╕╨╡ ╨┐╨╛ ╨▓╤Б╨╡╨╝╤Г ╨╝╨╕╤А╤Г, ╨в╨Э╨в, ╨┐╤А╨╛╨┐╨░╤Б╤В╨╕, 6 ╨╝╨╕╨╜╤Г╤В, ╨┐╨╛╨╗╨╜╨░╤П ╨│╨╡╨╜╨╡╤А╨░╤Ж╨╕╤П тАФ
+╨▓╤Б╤С ╤А╨░╤Б╨┐╨╕╤Б╨░╨╜╨╛ ╨║╨╛╨┤╨╛╨╝
+.
+┬л╨Э╨░╤Б╤В╨╛╤П╤Й╨╕╨╣ ╨Ш╨Ш ╨║╨░╨║ ╤Г ╨╕╨│╤А╨╛╨║╨░┬╗
+тАФ ╤В╨╛╨╗╤М╨║╨╛ ╤З╨╡╤А╨╡╨╖ ╨▓╨╜╨╡╤И╨╜╨╕╨╣ LLM (╨Т╨░╤А╨╕╨░╨╜╤В ╨С), offline ╤Н╤В╨╛ intent-╤Б╨╕╤Б╤В╨╡╨╝╨░ (╨Т╨░╤А╨╕╨░╨╜╤В ╨Р). ╨д╨╕╨╖╨╕╨║╨░ Minecraft-╨╝╨╛╨┤╨░ ╨╜╨╡ ╨┐╨╛╨╖╨▓╨╛╨╗╤П╨╡╤В ╨╜╨░╤Б╤В╨╛╤П╤Й╨╕╨╣ ╨Ш╨Ш ╨▒╨╡╨╖ API.
+╨б╨║╨░╨╢╨╕, ╨║╨░╨║╨╛╨╣ ╨Ш╨Ш ╨▒╨╡╤А╤С╨╝ (╨Р ╨╕╨╗╨╕ ╨С), ╨╕ ╤Е╨╛╤З╨╡╤И╤М ╨╗╨╕ ╤П ╤А╨░╤Б╨┐╨╕╤И╤Г ╨╜╨╡╨┤╨╛╤Б╤В╨░╤О╤Й╨╕╨╡ ╤Е╨╡╨╗╨┐╨╡╤А╤Л (
+spawnGhostMob
+,
+queueCopyReply
+, ╨╛╤З╨╡╤А╨╡╨┤╤М ╨╛╤В╨▓╨╡╤В╨╛╨▓) ╨┤╨╛ ╨║╨╛╨╜╤Ж╨░.

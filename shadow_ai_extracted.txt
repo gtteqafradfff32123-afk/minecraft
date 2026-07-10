@@ -1,0 +1,192 @@
+﻿public static AttributeModifierMap.MutableAttribute registerAttributes() {
+    return MobEntity.func_233666_p_()
+        .createMutableAttribute(Attributes.MAX_HEALTH, 100.0D)      // яюўЄш эхєсштрхьр 
+        .createMutableAttribute(Attributes.MOVEMENT_SPEED, 0.32D)   // ўєЄ№ с√ёЄЁхх шуЁюър-°рур
+        .createMutableAttribute(Attributes.KNOCKBACK_RESISTANCE, 1.0D) // эх юЄЄрыъштрхЄё 
+        .createMutableAttribute(Attributes.FOLLOW_RANGE, 128.0D);   // тшфшЄ шуЁюър шчфрыхър
+}
+---FILEBREAK---
+package com.example.titanforge.entities.ai;
+
+import com.example.titanforge.entities.ShadowEntity;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.ai.goal.Goal;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.util.math.vector.Vector3d;
+import java.util.EnumSet;
+
+public class ShadowStalkGoal extends Goal {
+    private final ShadowEntity shadow;
+    private PlayerEntity target;
+
+    // яёшїюыюушўхёъшх ёюёЄю эш  Єхэш
+    private enum Mood { WATCHING, STALKING, LURKING, CLOSING }
+    private Mood mood = Mood.WATCHING;
+    private int moodTicks = 0;
+    private int repositionCooldown = 0;
+
+    public ShadowStalkGoal(ShadowEntity shadow) {
+        this.shadow = shadow;
+        this.setMutexFlags(EnumSet.of(Flag.MOVE, Flag.LOOK));
+    }
+
+    @Override
+    public boolean shouldExecute() {
+        UUID owner = shadow.getOwnerId();
+        if (owner == null) return false;
+        this.target = shadow.world.getPlayerByUuid(owner);
+        return target != null && target.isAlive();
+    }
+
+    @Override
+    public boolean shouldContinueExecuting() {
+        return target != null && target.isAlive();
+    }
+
+    @Override
+    public void tick() {
+        if (target == null) return;
+        moodTicks++;
+        if (repositionCooldown > 0) repositionCooldown--;
+
+        // тёхуфр ёьюЄЁшЄ эр шуЁюър Ч цєЄъшщ эхьшур■∙шщ тчуы ф
+        shadow.getLookController().setLookPositionWithEntity(target, 30F, 30F);
+
+        double dist = shadow.getDistance(target);
+        boolean seen = isSeenByPlayer(target, shadow);
+
+        // ├╦└┬═└▀ ╠┼╒└═╚╩└: ёьюЄЁш°№ Ч чрьшЁрхЄ, юЄтхЁэєыё  Ч фтшцхЄё 
+        if (seen) {
+            handleWhileWatched(dist);
+        } else {
+            handleWhileUnseen(dist);
+        }
+    }
+
+    /** ╚уЁюъ ёьюЄЁшЄ эр Єхэ№: юэр чрьшЁрхЄ (ъръ ёЄрЄє ) шыш яЁ ўхЄё . */
+    private void handleWhileWatched(double dist) {
+        shadow.getNavigator().clearPath();  // ╟└╠╚╨└┼╥
+        mood = Mood.WATCHING;
+
+        // хёыш шуЁюъ я ышЄё  ёыш°ъюь фюыую ш Єхэ№ сышчъю Ч юэр юЄёЄєярхЄ т Єхэ№ (єьэю яЁ ўхЄё )
+        if (dist  25) {
+            // фрыхъю Ч ЄхыхяюЁЄшЁєхЄё  сышцх т ёыхяє■ чюэє (єьэ√щ лёърўюъ╗)
+            mood = Mood.STALKING;
+            if (repositionCooldown == 0) {
+                blinkCloser();
+                repositionCooldown = 40;
+            }
+        } else if (dist > 3) {
+            // ёЁхфэ   фшёЄрэЎш  Ч с√ёЄЁю шф╕Є яю pathfinding, юсїюф  яЁхя ЄёЄтш 
+            mood = Mood.CLOSING;
+            double speed = dist > 12 ? 1.4D : 1.0D; // шчфрыхър єёъюЁ хЄё 
+            shadow.getNavigator().tryMoveToEntityLiving(target, speed);
+        } else {
+            // тяыюЄэє■ ёчрфш Ч ьюьхэЄ єфрЁр
+            mood = Mood.LURKING;
+            strikeFromBehind();
+        }
+    }
+
+    /** ╙ьэ√щ лсышэъ╗: ЄхыхяюЁЄ т ёыхяє■ чюэє чр ёяшэющ шуЁюър, эх т яюых чЁхэш . */
+    private void blinkCloser() {
+        Vector3d look = target.getLookVec();
+        // Єюўър ╟└ ёяшэющ шуЁюър (яЁюЄштюяюыюцэю тчуы фє), 8-14 сыюъют
+        double behindDist = 8 + shadow.world.rand.nextInt(6);
+        double bx = target.getPosX() - look.x * behindDist;
+        double bz = target.getPosZ() - look.z * behindDist;
+        double by = findSafeY(bx, target.getPosY(), bz);
+        if (by > 0) {
+            shadow.setPositionAndUpdate(bx, by, bz);
+            // ўрёЄшЎ√ яю тыхэш 
+            ((net.minecraft.world.server.ServerWorld) shadow.world).spawnParticle(
+                net.minecraft.particles.ParticleTypes.SMOKE, bx, by+1, bz, 15, 0.3,0.5,0.3, 0.01);
+        }
+    }
+
+    /** ╬ЄёЄєяыхэшх т єъЁ√Єшх ъюуфр эр эх╕ я ы Єё : ш∙хЄ Єюўъє тэх чюэ√ тшфшьюёЄш. */
+    private void retreatToConcealment() {
+        Vector3d look = target.getLookVec();
+        double bx = target.getPosX() - look.x * 20;
+        double bz = target.getPosZ() - look.z * 20;
+        shadow.getNavigator().tryMoveToXYZ(bx, target.getPosY(), bz, 1.2D);
+    }
+
+    /** ╙фрЁ ёчрфш: Wither + Ё√тюъ FOV. ═х єсштрхЄ, эю яёшїєхЄ. */
+    private void strikeFromBehind() {
+        if (!isSeenByPlayer(target, shadow)) {
+            target.addPotionEffect(new EffectInstance(Effects.WITHER, 60, 1));
+            target.addPotionEffect(new EffectInstance(Effects.NAUSEA, 80, 0));
+            shadow.world.playSound(null, target.getPosition(),
+                net.minecraft.util.SoundEvents.ENTITY_WITHER_AMBIENT,
+                net.minecraft.util.SoundCategory.HOSTILE, 0.6F, 0.3F);
+            // яюёых єфрЁр юЄёъръштрхЄ, ўЄюс√ ёэютр эрўрЄ№ ёЄрыъшэу
+            blinkCloser();
+        }
+    }
+
+    private double findSafeY(double x, double startY, double z) {
+        // ш∙хь Єт╕Ёф√щ сыюъ яюф Єюўъющ, ўЄюс√ эх ёяртэшЄ№ё  т тючфєїх/ёЄхэх
+        for (int dy = 2; dy >= -4; dy--) {
+            net.minecraft.util.math.BlockPos p = new net.minecraft.util.math.BlockPos(x, startY+dy, z);
+            if (!shadow.world.getBlockState(p).isSolid()
+                && shadow.world.getBlockState(p.down()).isSolid())
+                return startY + dy;
+        }
+        return -1;
+    }
+}
+---FILEBREAK---
+public static boolean isSeenByPlayer(PlayerEntity player, ShadowEntity shadow) {
+    Vector3d look = player.getLook(1.0F).normalize();
+    Vector3d toShadow = new Vector3d(
+        shadow.getPosX() - player.getPosX(),
+        shadow.getPosYEye() - player.getPosYEye(),
+        shadow.getPosZ() - player.getPosZ());
+    double len = toShadow.length();
+    if (len  0.6 = Єхэ№ яЁшьхЁэю т яюых чЁхэш  (~53░ ъюэєё).
+    // ╧ы■ё яЁютхЁър ўЄю эхЄ ёЄхэ√ ьхцфє шуЁюъюь ш Єхэ№■ (line of sight).
+    if (dot > 0.6) {
+        return player.canEntityBeSeen(shadow); // ЁхщърёЄ ёътюч№ сыюъш
+    }
+    return false;
+}
+---FILEBREAK---
+@Override
+protected void registerGoals() {
+    this.goalSelector.addGoal(1, new ShadowStalkGoal(this));
+    this.goalSelector.addGoal(2, new SwimGoal(this)); // эх ЄюэхЄ
+}
+
+// Єхэ№ эх фюыцэр яюыєўрЄ№ єЁюэ юЄ ярфхэш /єфє°№ , юэр эх ёютёхь Їшчшўхёър 
+@Override public boolean onLivingFall(float dist, float mult) { return false; }
+@Override protected void updateAir(int air) {} // эх чрф√їрхЄё 
+@Override public boolean isInvulnerableTo(DamageSource src) {
+    // эхє чтшьр яюўЄш ъю тёхьє, ъЁюьх яЁ ьюую єфрЁр шуЁюър-тырфхы№Ўр т єяюЁ (юяЎ.)
+    return src != DamageSource.OUT_OF_WORLD;
+}
+---FILEBREAK---
+@Override
+public void livingTick() {
+    super.livingTick();
+    if (world.isRemote) return;
+
+    // 1. ╦╕уъюх яюърўштрэшх/фЁюцрэшх Ч Єхэ№ лф√°шЄ╗, эх ёЄюшЄ ъюыюь
+    // (тшчєры№э√щ фцшЄЄхЁ фхырхЄё  т ЁхэфхЁх, ЄєЄ Єюы№ъю ыюушър)
+
+    // 2. ╨хръЎш  эр Ёхчъшщ ЁрчтюЁюЄ шуЁюър: хёыш шуЁюъ ф╕Ёэєы ърьхЁє ъ Єхэш,
+    //    юэр фхырхЄ ьуэютхээ√щ °ру эрчрф (єъыюэ хЄё  юЄ тчуы фр) Ч ¤ЇЇхъЄ ляюърчрыюё№╗.
+    PlayerEntity p = (getOwnerId() != null) ? world.getPlayerByUuid(getOwnerId()) : null;
+    if (p != null) {
+        float yawDelta = Math.abs(p.rotationYaw - p.prevRotationYaw);
+        if (yawDelta > 40 && getDistance(p) < 15 && ShadowStalkGoal.isSeenByPlayer(p, this)) {
+            // Ёхчъю юЄёЄєярхЄ эр °ру Ч ъръ сєфЄю юЄяЁ эєыр
+            Vector3d away = new Vector3d(getPosX()-p.getPosX(), 0, getPosZ()-p.getPosZ()).normalize();
+            setMotion(away.x * 0.4, 0, away.z * 0.4);
+        }
+    }
+
+    // 3. ═шъюуфр эх яЁюярфрхЄ эрёютёхь: хёыш шуЁюъ єсхцры чр FOLLOW_RANGE,
+    //    Єхэ№ лфюуюэ хЄ╗ сышэъюь, ўЄюс√ тёхуфр ьр ўшЄ№ эр уЁрэш тшфшьюёЄш.
+}
+---FILEBREAK---

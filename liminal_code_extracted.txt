@@ -1,0 +1,430 @@
+﻿com/example/titanforge/
+тФЬтФАтФА liminal/
+тФВ   тФЬтФАтФА LiminalDimension.java     // void-╨╕╨╖╨╝╨╡╤А╨╡╨╜╨╕╨╡, ╨╜╨╛╤З╤М
+тФВ   тФЬтФАтФА LiminalManager.java       // ╨▓╤Е╨╛╨┤/╨▓╤Л╤Е╨╛╨┤, ╤Б╤В╨╡╨╣╤В-╨╝╨░╤И╨╕╨╜╨░, ╨│╨╜╨╕╨╡╨╜╨╕╨╡, ╨╖╨░╨╝╨╛╤А╨╛╨╖╨║╨░
+тФВ   тФЬтФАтФА copy/
+тФВ   тФВ   тФЬтФАтФА ChunkCopyManager.java // ╨▒╨░╤В╤З-╨╛╤З╨╡╤А╨╡╨┤╤М
+тФВ   тФВ   тФЬтФАтФА CopyJob.java
+тФВ   тФВ   тФФтФАтФА AreaCopier.java       // ╨║╨╛╨┐╨╕╤А ╤Б╨╗╨╛╨╡╨╝ ┬▒40 ╨▓ ╨║╤А╤Г╨│╨╡ r=100
+тФВ   тФФтФАтФА screen/LimboHandler.java  // ╤З╤С╤А╨╜╤Л╨╣ ╤Н╨║╤А╨░╨╜
+тФЬтФАтФА entities/
+тФВ   тФЬтФАтФА ShadowEntity.java         // ╤В╨╡╨╜╤М ╤Б╨╛ ╤Б╨║╨╕╨╜╨╛╨╝ ╨╕╨│╤А╨╛╨║╨░
+тФВ   тФФтФАтФА StunZombieEntity.java     // ╨╖╨╛╨╝╨▒╨╕-╨╛╨│╨╗╤Г╤И╨╕╤В╨╡╨╗╤М (╤Д╨╕╨║╤Б ╨░╤В╤А╨╕╨▒╤Г╤В╨╛╨▓)
+тФЬтФАтФА client/
+тФВ   тФЬтФАтФА ShadowRenderer.java       // PlayerModel + ╤Б╨║╨╕╨╜ ╨▓╨╗╨░╨┤╨╡╨╗╤М╤Ж╨░
+тФВ   тФФтФАтФА ClientSetup.java
+тФЬтФАтФА items/
+тФВ   тФЬтФАтФА LiminalDraughtItem.java   // ╨╖╨╡╨╗╤М╨╡ ╨┐╨╛╤А╤В╨░╨╗╨░
+тФВ   тФФтФАтФА LiminalArrowItem.java     // ╤Б╤В╤А╨╡╨╗╨░ ╨┐╨╛╤А╤В╨░╨╗╨░
+тФФтФАтФА TitanForge.java               // ╤Б╨╛╨▒╤Л╤В╨╕╤П, ╤Б╨┐╨░╨▓╨╜-╨▒╨╗╨╛╨║╨╡╤А
+---FILEBREAK---
+{
+  "ultrawarm": false, "natural": false, "piglin_safe": false,
+  "respawn_anchor_works": false, "bed_works": false, "has_raids": false,
+  "has_skylight": true, "has_ceiling": false, "coordinate_scale": 1.0,
+  "ambient_light": 0.0, "logical_height": 256,
+  "infiniburn": "minecraft:infiniburn_overworld",
+  "effects": "minecraft:the_end", "fixed_time": 18000
+}
+---FILEBREAK---
+{
+  "type": "titanforge:liminal_type",
+  "generator": {
+    "type": "minecraft:flat",
+    "settings": {
+      "layers": [],
+      "biome": "minecraft:the_void",
+      "structures": { "structures": {} }
+    }
+  }
+}
+---FILEBREAK---
+public class LiminalDimension {
+    public static final RegistryKey LIMINAL_WORLD =
+        RegistryKey.getOrCreateKey(Registry.WORLD_KEY,
+            new ResourceLocation("titanforge", "liminal"));
+
+    /** null ╨▓╨╝╨╡╤Б╤В╨╛ throw тАФ enter() ╤З╨╡╤Б╤В╨╜╨╛ ╤Д╨╡╨╣╨╗╨╕╤В╤Б╤П ╤Б ╤Б╨╛╨╛╨▒╤Й╨╡╨╜╨╕╨╡╨╝. */
+    public static ServerWorld get(MinecraftServer server) {
+        return server.getWorld(LIMINAL_WORLD);
+    }
+}
+---FILEBREAK---
+public class AreaCopier {
+    public static int copyChunkFull(ServerWorld source, ServerWorld target,
+                                    ChunkPos pos, BlockPos center, int radius) {
+        // ╨╜╨╡ ╨│╨╡╨╜╨╡╤А╨╕╨╝ ╨╜╨╡╤Б╤Г╤Й╨╡╤Б╤В╨▓╤Г╤О╤Й╨╕╨╡ ╤З╨░╨╜╨║╨╕ ╤Б╨╕╨╜╤Е╤А╨╛╨╜╨╜╨╛
+        if (!source.getChunkProvider().isChunkLoaded(pos)) return 0;
+
+        Chunk src = source.getChunk(pos.x, pos.z);
+        int copied = 0;
+        int r2 = radius * radius;
+        int cy = center.getY();
+        int minY = Math.max(1, cy - 40);   // ╤В╨╛╨╗╤М╨║╨╛ ╤Б╨╗╨╛╨╣ ╨▓╨╛╨║╤А╤Г╨│ ╨╕╨│╤А╨╛╨║╨░
+        int maxY = Math.min(255, cy + 40);
+
+        for (int lx = 0; lx  r2) continue; // ╨║╤А╤Г╨│╨╗╨░╤П ╨│╤А╨░╨╜╨╕╤Ж╨░
+
+                for (int y = minY; y  r2) continue;
+                clone.setBlockState(new BlockPos(center.getX()+x, floorY, center.getZ()+z),
+                    Blocks.BEDROCK.getDefaultState(), 18);
+            }
+    }
+
+    /** ╨з╤С╤А╨╜╨░╤П ╤Б╤В╨╡╨╜╨░: BLACK_CONCRETE ╤Б╨╜╨░╤А╤Г╨╢╨╕ + BARRIER ╨▓╨╜╤Г╤В╤А╨╕, ╨║╨╛╨╗╤М╤Ж╨╛ r=100. */
+    public static void buildVoidWall(ServerWorld clone, BlockPos center, int radius) {
+        int minY = 0, maxY = 200;
+        for (int a = 0; a < 3600; a++) {
+            double rad = Math.toRadians(a / 10.0);
+            int ox = center.getX() + (int) Math.round(Math.cos(rad) * radius);
+            int oz = center.getZ() + (int) Math.round(Math.sin(rad) * radius);
+            int ix = center.getX() + (int) Math.round(Math.cos(rad) * (radius - 1));
+            int iz = center.getZ() + (int) Math.round(Math.sin(rad) * (radius - 1));
+            for (int y = minY; y <= maxY; y++) {
+                clone.setBlockState(new BlockPos(ox, y, oz), Blocks.BLACK_CONCRETE.getDefaultState(), 18);
+                clone.setBlockState(new BlockPos(ix, y, iz), Blocks.BARRIER.getDefaultState(), 18);
+            }
+        }
+    }
+}
+---FILEBREAK---
+public class CopyJob {
+    public final UUID victim;
+    public final ServerWorld source, target;
+    public final BlockPos center;
+    private final Deque queue = new ArrayDeque<>();
+    private final int totalChunks;
+    private int done = 0, blocksCopied = 0;
+
+    public CopyJob(UUID victim, ServerWorld source, ServerWorld target, BlockPos center, int radiusBlocks) {
+        this.victim = victim; this.source = source; this.target = target; this.center = center;
+        int cr = (radiusBlocks >> 4) + 1;
+        ChunkPos c = new ChunkPos(center);
+        for (int dx = -cr; dx  ACTIVE = new ArrayList<>();
+    private static final int CHUNKS_PER_TICK = 6;
+    public static void enqueue(CopyJob job) { ACTIVE.add(job); }
+
+    @SubscribeEvent
+    public void onServerTick(TickEvent.ServerTickEvent e) {
+        if (e.phase != TickEvent.Phase.END || ACTIVE.isEmpty()) return;
+        Iterator it = ACTIVE.iterator();
+        while (it.hasNext()) {
+            CopyJob job = it.next();
+            job.step(CHUNKS_PER_TICK);
+            ServerPlayerEntity p = job.target.getServer().getPlayerList().getPlayerByUUID(job.victim);
+            if (p != null) LimboHandler.updateProgress(p, job.progress());
+            if (job.isDone()) {
+                LiminalManager.onCloneReady(job);
+                it.remove();
+            }
+        }
+    }
+}
+---FILEBREAK---
+public class LimboHandler {
+    public static void enterLimbo(ServerPlayerEntity player) {
+        player.addPotionEffect(new EffectInstance(Effects.BLINDNESS, 20 * 30, 0, false, false));
+        player.addPotionEffect(new EffectInstance(Effects.SLOWNESS, 20 * 30, 250, false, false));
+        player.connection.sendPacket(new STitlePacket(STitlePacket.Type.TITLE, new StringTextComponent("┬з0. . .")));
+    }
+    public static void updateProgress(ServerPlayerEntity player, float pct) {
+        player.connection.sendPacket(new STitlePacket(STitlePacket.Type.SUBTITLE,
+            new StringTextComponent("┬з8╨┐╨╛╨│╤А╤Г╨╢╨╡╨╜╨╕╨╡ " + Math.round(pct*100) + "%")));
+    }
+    public static void exitLimbo(ServerPlayerEntity player) {
+        player.removePotionEffect(Effects.BLINDNESS);
+        player.removePotionEffect(Effects.SLOWNESS);
+        player.connection.sendPacket(new STitlePacket(STitlePacket.Type.TITLE, new StringTextComponent("")));
+    }
+}
+---FILEBREAK---
+public class LiminalManager {
+    private static final int RADIUS = 100;
+    private static final Map ROT_CHAIN = ImmutableMap.of(
+        Blocks.GRASS_BLOCK, Blocks.DIRT,
+        Blocks.DIRT,        Blocks.COARSE_DIRT,
+        Blocks.COARSE_DIRT, Blocks.SOUL_SAND);
+
+    public static class State {
+        public UUID victim;
+        public BlockPos center, realReturnPos;
+        public int ticks = 0, durationTicks, zombiesKilled = 0, zombiesAlive = 0;
+        public boolean cloneReady = false, shadowSpawned = false, frozen = false, markDeadOnRejoin = false;
+    }
+    private static final Map STATES = new HashMap<>();
+
+    public static void enter(LivingEntity victim, ServerPlayerEntity owner, int durationSec) {
+        ServerWorld world = (ServerWorld) victim.world;
+        if (!(victim instanceof ServerPlayerEntity)) { enterMob(victim, world); return; }
+        ServerPlayerEntity vp = (ServerPlayerEntity) victim;
+        ServerWorld clone = LiminalDimension.get(vp.getServer());
+        if (clone == null) {
+            if (owner != null) owner.sendStatusMessage(
+                new StringTextComponent("┬зc╨Ы╨╕╨╝╨╕╨╜╨░╨╗╤М╨╜╨╛╨╡ ╨╕╨╖╨╝╨╡╤А╨╡╨╜╨╕╨╡ ╨╜╨╡ ╨╖╨░╨│╤А╤Г╨╢╨╡╨╜╨╛ (╨╜╤Г╨╢╨╡╨╜ ╨╜╨╛╨▓╤Л╨╣ ╨╝╨╕╤А)"), true);
+            return;
+        }
+        State st = new State();
+        st.victim = vp.getUniqueID();
+        st.center = vp.getPosition();
+        st.realReturnPos = vp.getPosition();
+        st.durationTicks = durationSec * 20;
+        STATES.put(st.victim, st);
+
+        applyLiminalHit(vp);        // ╨▒╨╡╤Б╨║╨╛╨╜╨╡╤З╨╜╨░╤П ╤Б╨╗╨╡╨┐╨╛╤В╨░ + ╨╖╨░╨╝╨╛╤А╨╛╨╖╨║╨░
+        st.frozen = true;
+        LimboHandler.enterLimbo(vp);
+        ChunkCopyManager.enqueue(new CopyJob(st.victim, world, clone, st.center, RADIUS));
+    }
+
+    /** ╨╝╨╛╨▒ ╨┐╤А╨╛╤Б╤В╨╛ ╨╕╤Б╤З╨╡╨╖╨░╨╡╤В */
+    public static void enterMob(LivingEntity victim, ServerWorld world) {
+        world.spawnParticle(ParticleTypes.PORTAL, victim.getPosX(), victim.getPosY()+victim.getHeight()/2, victim.getPosZ(), 60, 0.4,0.8,0.4, 0.3);
+        world.playSound(null, victim.getPosition(), SoundEvents.BLOCK_PORTAL_TRIGGER, SoundCategory.HOSTILE, 0.7F, 0.4F);
+        victim.remove();
+    }
+
+    /** ╨▒╨╡╤Б╨║╨╛╨╜╨╡╤З╨╜╨░╤П ╤Б╨╗╨╡╨┐╨╛╤В╨░ + ╨┐╨╛╨╗╨╜╨░╤П ╨╖╨░╨╝╨╛╤А╨╛╨╖╨║╨░ ╨┐╤А╨╕ ╨┐╨╛╨┐╨░╨┤╨░╨╜╨╕╨╕ */
+    public static void applyLiminalHit(LivingEntity target) {
+        target.addPotionEffect(new EffectInstance(Effects.BLINDNESS, Integer.MAX_VALUE, 0, false, false));
+        target.addPotionEffect(new EffectInstance(Effects.SLOWNESS, Integer.MAX_VALUE, 255, false, false));
+        target.addPotionEffect(new EffectInstance(Effects.JUMP_BOOST, Integer.MAX_VALUE, 128, false, false)); // ╨╛╤В╤А╨╕╤Ж╨░╤В╨╡╨╗╤М╨╜╤Л╨╣ ╨┐╤А╤Л╨╢╨╛╨║
+    }
+
+    public static void onCloneReady(CopyJob job) {
+        ServerPlayerEntity vp = job.target.getServer().getPlayerList().getPlayerByUUID(job.victim);
+        if (vp == null) return;
+        State st = STATES.get(job.victim);
+        if (st == null) return;
+        AreaCopier.buildFloor(job.target, st.center, RADIUS);
+        AreaCopier.buildVoidWall(job.target, st.center, RADIUS);
+        ChunkPos tgt = new ChunkPos(st.center);
+        job.target.getChunkProvider().registerTicket(TicketType.POST_TELEPORT, tgt, 1, vp.getEntityId());
+        job.target.getChunkProvider().forceChunk(tgt, true);
+        vp.teleport(job.target, st.center.getX()+0.5, st.center.getY(), st.center.getZ()+0.5, vp.rotationYaw, vp.rotationPitch);
+        LimboHandler.exitLimbo(vp);
+        st.cloneReady = true;
+        vp.setGameType(GameType.ADVENTURE);
+    }
+
+    public static void tick(ServerWorld clone) {
+        Iterator> it = STATES.entrySet().iterator();
+        while (it.hasNext()) {
+            State st = it.next().getValue();
+            if (!st.cloneReady) continue;
+            ServerPlayerEntity vp = clone.getServer().getPlayerList().getPlayerByUUID(st.victim);
+            if (vp == null) continue;
+            st.ticks++;
+
+            // ╨┐╨╛╨╗╨╜╨░╤П ╨╖╨░╨╝╨╛╤А╨╛╨╖╨║╨░: ╨│╨░╤Б╨╕╨╝ motion ╨║╨░╨╢╨┤╤Л╨╣ ╤В╨╕╨║
+            if (st.frozen) {
+                vp.setMotion(0, vp.getMotion().y, 0);
+                vp.velocityChanged = true;
+                vp.setSprinting(false);
+                vp.setJumping(false);
+            }
+            // ╨╕╤Б╤В╨╛╤Й╨╡╨╜╨╕╨╡ 1 hp / 3 ╤Б╨╡╨║
+            if (st.ticks % 60 == 0 && vp.getHealth() > 1f)
+                vp.attackEntityFrom(DamageSource.WITHER, 1f);
+            // ╨╖╨╛╨╝╨▒╨╕ ╨║╨░╨╢╨┤╤Л╨╡ 20 ╤Б╨╡╨║ (╨╝╨░╨║╤Б 6)
+            if (st.ticks % (20 * 20) == 0 && st.zombiesAlive = 30 * 20 && st.ticks % (30 * 20) == 0)
+                rotTick(clone, vp.getPosition(), st);
+            // ╤В╨╡╨╜╤М ╤З╨╡╤А╨╡╨╖ ╨┐╨╛╤А╨╛╨│, ╨╜╨╡ ╤В╨╛╤З╨╜╤Л╨╣ ╤В╨╕╨║
+            if (!st.shadowSpawned && st.ticks >= 60 * 20) {
+                spawnShadow(clone, st, vp);
+                st.shadowSpawned = true;
+            }
+            // ╤Н╤Д╤Д╨╡╨║╤В╤Л ╤Г ╤Б╤В╨╡╨╜╤Л
+            double dist = Math.sqrt(vp.getDistanceSq(st.center.getX()+0.5, vp.getPosY(), st.center.getZ()+0.5));
+            if (dist > 90) {
+                vp.addPotionEffect(new EffectInstance(Effects.NAUSEA, 60, 0, false, false));
+                clone.spawnParticle(ParticleTypes.LARGE_SMOKE, vp.getPosX(), vp.getPosY()+1, vp.getPosZ(), 8, 0.6,0.9,0.6, 0.02);
+            }
+            // ╨▓╤Л╤Е╨╛╨┤
+            if (st.ticks >= st.durationTicks || st.zombiesKilled >= 4) {
+                boolean early = st.zombiesKilled >= 4 && st.ticks =3) */
+    private static void rotTick(ServerWorld clone, BlockPos center, State st) {
+        Random r = clone.rand;
+        int decayStage = st.ticks / (30 * 20);
+        for (BlockPos p : BlockPos.getAllInBoxMutable(center.add(-8,-4,-8), center.add(8,4,8))) {
+            BlockState bs = clone.getBlockState(p);
+            if (bs.isAir()) continue;
+            Block next = ROT_CHAIN.get(bs.getBlock());
+            if (next != null && r.nextFloat() = 3 && r.nextFloat() = 6) return;
+        StunZombieEntity z = ModEntities.STUN_ZOMBIE.get().create(w);
+        if (z == null) return;
+        BlockPos p = near.add(-8 + w.rand.nextInt(16), 0, -8 + w.rand.nextInt(16));
+        z.setLocationAndAngles(p.getX()+0.5, p.getY(), p.getZ()+0.5, 0f, 0f);
+        w.addEntity(z);
+        st.zombiesAlive++;
+    }
+    private static void spawnShadow(ServerWorld w, State st, ServerPlayerEntity owner) {
+        ShadowEntity shadow = ModEntities.SHADOW.get().create(w);
+        if (shadow == null) return;
+        double a = w.rand.nextDouble() * Math.PI * 2;
+        shadow.setLocationAndAngles(owner.getPosX()+Math.cos(a)*20, owner.getPosY(), owner.getPosZ()+Math.sin(a)*20, 0f, 0f);
+        shadow.setOwner(owner.getUniqueID());
+        w.addEntity(shadow);
+    }
+
+    public static boolean isInside(PlayerEntity p) {
+        State st = STATES.get(p.getUniqueID());
+        return st != null && st.cloneReady;
+    }
+    public static void onLogout(UUID id) { State st = STATES.get(id); if (st != null && st.cloneReady) st.markDeadOnRejoin = true; }
+    public static void onLogin(ServerPlayerEntity p) {
+        State st = STATES.get(p.getUniqueID());
+        if (st != null && st.markDeadOnRejoin) p.attackEntityFrom(DamageSource.OUT_OF_WORLD, Float.MAX_VALUE);
+    }
+}
+---FILEBREAK---
+public class StunZombieEntity extends ZombieEntity {
+    public StunZombieEntity(EntityType type, World world) { super(type, world); }
+
+    public static AttributeModifierMap.MutableAttribute registerAttributes() {
+        return ZombieEntity.func_234342_eQ_()   // ╨▒╨░╨╖╨░ ╨Ч╨Ю╨Ь╨С╨Ш, ╨╜╨╡ MonsterEntity тАФ ╨╕╨╜╨░╤З╨╡ NPE ╨┐╤А╨╕ ╤Г╤А╨╛╨╜╨╡
+            .createMutableAttribute(Attributes.MAX_HEALTH, 20.0D)
+            .createMutableAttribute(Attributes.MOVEMENT_SPEED, 0.23D)
+            .createMutableAttribute(Attributes.ATTACK_DAMAGE, 3.0D)
+            .createMutableAttribute(Attributes.SPAWN_REINFORCEMENTS_CHANCE, 0.0D); // ╨╜╨╡ ╨╖╨╛╨▓╤С╤В ╨┐╨╛╨┤╨╝╨╛╨│╤Г
+    }
+    // ╤Г╨┤╨░╤А ╨╖╨╛╨╝╨▒╨╕ тЖТ Slowness V + Blindness 2 ╤Б╨╡╨║
+    @Override
+    public boolean attackEntityAsMob(Entity target) {
+        boolean hit = super.attackEntityAsMob(target);
+        if (hit && target instanceof LivingEntity) {
+            ((LivingEntity) target).addPotionEffect(new EffectInstance(Effects.SLOWNESS, 40, 4));
+            ((LivingEntity) target).addPotionEffect(new EffectInstance(Effects.BLINDNESS, 40, 0));
+        }
+        return hit;
+    }
+}
+---FILEBREAK---
+public class ShadowEntity extends MobEntity {
+    private static final DataParameter> OWNER =
+        EntityDataManager.createKey(ShadowEntity.class, DataSerializers.OPTIONAL_UNIQUE_ID);
+    private GameProfile cachedProfile = null;
+
+    public ShadowEntity(EntityType type, World world) { super(type, world); }
+
+    @Override protected void registerData() { super.registerData(); this.dataManager.register(OWNER, Optional.empty()); }
+    public void setOwner(UUID id) { this.dataManager.set(OWNER, Optional.of(id)); cachedProfile = null; } // ╤Б╨▒╤А╨╛╤Б ╨║╤Н╤И╨░ ╨┐╤А╨╕ ╨╜╨╛╨▓╨╛╨╝ owner
+    public UUID getOwnerId() { return this.dataManager.get(OWNER).orElse(null); }
+
+    @Override public void writeAdditional(CompoundNBT nbt) {
+        super.writeAdditional(nbt);
+        UUID id = getOwnerId(); if (id != null) nbt.putUniqueId("ShadowOwner", id);
+    }
+    @Override public void readAdditional(CompoundNBT nbt) {
+        super.readAdditional(nbt);
+        if (nbt.hasUniqueId("ShadowOwner")) setOwner(nbt.getUniqueId("ShadowOwner"));
+    }
+
+    public GameProfile getOwnerProfile() {
+        UUID id = getOwnerId(); if (id == null) return null;
+        if (cachedProfile != null && id.equals(cachedProfile.getId())) return cachedProfile;
+        PlayerEntity p = this.world.getPlayerByUuid(id);
+        cachedProfile = (p != null) ? p.getGameProfile() : new GameProfile(id, ""); // ╨╢╨╕╨▓╨╛╨╣ ╨┐╤А╨╛╤Д╨╕╨╗╤М ╨▓ ╨┐╤А╨╕╨╛╤А╨╕╤В╨╡╤В╨╡
+        return cachedProfile;
+    }
+
+    // ╤В╨╡╨╜╤М: ╨╜╨╡ ╨░╤В╨░╨║╤Г╨╡╤В, ╤Б╤В╨╛╨╕╤В ╨▓ 20 ╨▒╨╗╨╛╨║╨░╤Е, ╨┐╨╛╨┤╤Е╨╛╨┤╨╕╤В ╨╡╤Б╨╗╨╕ ╨╛╤В╨▓╨╡╤А╨╜╤Г╤В╤М╤Б╤П, ╨▓╨┐╨╗╨╛╤В╨╜╤Г╤О тЖТ Wither II + ╨╕╤Б╤З╨╡╨╖╨░╨╡╤В
+    @Override public void livingTick() {
+        super.livingTick();
+        if (world.isRemote) return;
+        PlayerEntity target = (getOwnerId() != null) ? world.getPlayerByUuid(getOwnerId()) : null;
+        if (target == null) return;
+        this.getLookController().setLookPositionWithEntity(target, 30F, 30F);
+        double dist = this.getDistance(target);
+        if (dist < 1.5D) {
+            target.addPotionEffect(new EffectInstance(Effects.WITHER, 100, 1));
+            this.remove();
+        }
+    }
+}
+---FILEBREAK---
+public class ShadowRenderer extends MobRenderer> {
+    public ShadowRenderer(EntityRendererManager mgr) {
+        super(mgr, new PlayerModel<>(0.0F, false), 0.5F); // PlayerModel, ╨╜╨╡ BipedModel!
+    }
+    @Override
+    public ResourceLocation getEntityTexture(ShadowEntity entity) {
+        GameProfile profile = entity.getOwnerProfile();
+        if (profile != null) {
+            Minecraft mc = Minecraft.getInstance();
+            Map map = mc.getSkinManager().loadSkinFromCache(profile);
+            if (map.containsKey(Type.SKIN))
+                return mc.getSkinManager().loadSkin(map.get(Type.SKIN), Type.SKIN);
+            mc.getSkinManager().loadProfileTextures(profile, (t, loc, tex) -> {}, true); // ╨┐╤А╨╛╨│╤А╨╡╨▓
+            UUID owner = entity.getOwnerId();
+            return DefaultPlayerSkin.getDefaultSkin(owner != null ? owner : entity.getUniqueID()); // ╤Д╨╛╨╗╨▒╤Н╨║ ╨┐╨╛ ╨▓╨╗╨░╨┤╨╡╨╗╤М╤Ж╤Г
+        }
+        return DefaultPlayerSkin.getDefaultSkin();
+    }
+    // ╤З╤С╤А╨╜╤Л╨╣ ╤Б╨╕╨╗╤Г╤Н╤В ╤В╨╡╨╜╨╕
+    @Override
+    public void render(ShadowEntity entity, float yaw, float pt, MatrixStack ms, IRenderTypeBuffer buffers, int light) {
+        super.render(entity, yaw, pt, ms, buffers, 0); // light=0
+    }
+}
+---FILEBREAK---
+@Override
+public ActionResult onItemRightClick(World world, PlayerEntity player, Hand hand) {
+    ItemStack stack = player.getHeldItem(hand);
+    world.playSound(null, player.getPosX(), player.getPosY(), player.getPosZ(),
+        SoundEvents.ENTITY_SPLASH_POTION_THROW, SoundCategory.PLAYERS, 0.5F, 0.4F);
+    if (!world.isRemote) {
+        LiminalDraughtEntity bottle = new LiminalDraughtEntity(world, player);
+        bottle.setItem(stack);
+        bottle.func_234612_a_(player, player.rotationPitch, player.rotationYaw, -20.0F, 0.7F, 1.0F);
+        world.addEntity(bottle);
+    }
+    if (!player.abilities.isCreativeMode) stack.shrink(1);
+    return ActionResult.resultSuccess(stack);
+}
+// ╨▓ onImpact ╨╗╨╡╤В╤П╤Й╨╡╨╣ ╨▒╤Г╤В╤Л╨╗╨║╨╕:
+for (LivingEntity e : world.getEntitiesWithinAABB(LivingEntity.class, getBoundingBox().grow(3.0))) {
+    if (e == getThrower()) continue;
+    LiminalManager.enter(e, owner, 120 + rand.nextInt(120));
+}
+---FILEBREAK---
+@Override
+protected void onEntityHit(EntityRayTraceResult ray) {
+    super.onEntityHit(ray);
+    if (world.isRemote) return;
+    Entity hit = ray.getEntity();
+    if (!(hit instanceof LivingEntity)) return;
+    ServerPlayerEntity owner = (func_234616_v_() instanceof ServerPlayerEntity) ? (ServerPlayerEntity) func_234616_v_() : null;
+    LiminalManager.enter((LivingEntity) hit, owner, 120 + rand.nextInt(120));
+    this.remove();
+}
+---FILEBREAK---
+@SubscribeEvent public void onServerStart(FMLServerStartingEvent e) { /* sync seed ╨╡╤Б╨╗╨╕ ╨╜╨░╨┤╨╛ */ }
+
+@SubscribeEvent
+public void onWorldTick(TickEvent.WorldTickEvent e) {
+    if (e.phase == TickEvent.Phase.END && e.world instanceof ServerWorld
+        && ((ServerWorld) e.world).getDimensionKey() == LiminalDimension.LIMINAL_WORLD)
+        LiminalManager.tick((ServerWorld) e.world);
+}
+
+@SubscribeEvent public void onLogout(PlayerEvent.PlayerLoggedOutEvent e) { LiminalManager.onLogout(e.getPlayer().getUniqueID()); }
+@SubscribeEvent public void onLogin(PlayerEvent.PlayerLoggedInEvent e) {
+    if (e.getPlayer() instanceof ServerPlayerEntity) LiminalManager.onLogin((ServerPlayerEntity) e.getPlayer());
+}
+
+// ╤Б╨┐╨░╨▓╨╜-╨▒╨╗╨╛╨║╨╡╤А: ╤В╨╛╨╗╤М╨║╨╛ ╨╜╨░╤И╨╕ ╨╝╨╛╨▒╤Л ╨▓ ╨╕╨╖╨╝╨╡╤А╨╡╨╜╨╕╨╕
+@SubscribeEvent
+public void onSpawn(LivingSpawnEvent.CheckSpawn e) {
+    if (e.getWorld() instanceof ServerWorld
+        && ((ServerWorld) e.getWorld()).getDimensionKey() == LiminalDimension.LIMINAL_WORLD) {
+        Entity ent = e.getEntity();
+        if (!(ent instanceof StunZombieEntity) && !(ent instanceof ShadowEntity))
+            e.setResult(Event.Result.DENY);
+    }
+}
+---FILEBREAK---
+// liminal_draught.json
+{ "parent": "item/generated", "textures": { "layer0": "titanforge:item/liminal_draught" } }
+// liminal_arrow.json
+{ "parent": "item/generated", "textures": { "layer0": "titanforge:item/liminal_arrow" } }
+---FILEBREAK---
