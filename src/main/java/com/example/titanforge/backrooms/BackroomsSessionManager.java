@@ -1,8 +1,12 @@
 package com.example.titanforge.backrooms;
 
 import com.example.titanforge.TitanForge;
+import com.example.titanforge.liminal.LiminalDimension;
 import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.potion.EffectInstance;
+import net.minecraft.potion.Effects;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.server.ServerWorld;
 
 import java.util.HashMap;
@@ -26,11 +30,23 @@ public final class BackroomsSessionManager {
     public static boolean start(ServerPlayerEntity victim, ServerPlayerEntity owner) {
         UUID id = victim.getUniqueID();
         if (SESSIONS.containsKey(id)) return false;
-        ServerWorld overworld = victim.getServer().getWorld(net.minecraft.world.World.OVERWORLD);
+        ServerWorld backroomsWorld = LiminalDimension.get(victim.getServer());
+        if (backroomsWorld == null) {
+            victim.sendStatusMessage(new StringTextComponent("§cИзмерение Backrooms не загружено (нужен новый мир или datapack)."), true);
+            TitanForge.LOGGER.warn("[backrooms] dimension not available for {}", victim.getName().getString());
+            return false;
+        }
         BlockPos center = victim.getPosition();
         long seed = victim.world.rand.nextLong();
         BackroomsSession session = new BackroomsSession(id, center, seed);
         SESSIONS.put(id, session);
+
+        TitanForge.LOGGER.info("[backrooms] teleporting player={} to center={}", victim.getName().getString(), center);
+        victim.teleport(backroomsWorld, center.getX() + 0.5, center.getY(), center.getZ() + 0.5, victim.rotationYaw, victim.rotationPitch);
+        victim.addPotionEffect(new EffectInstance(Effects.BLINDNESS, Integer.MAX_VALUE, 0, false, false));
+        victim.addPotionEffect(new EffectInstance(Effects.SLOWNESS, Integer.MAX_VALUE, 255, false, false));
+        victim.addPotionEffect(new EffectInstance(Effects.JUMP_BOOST, Integer.MAX_VALUE, 128, false, false));
+        victim.sendStatusMessage(new StringTextComponent("§8Ты вошёл в Backrooms. Не доверяй выходам."), false);
         TitanForge.LOGGER.info("[backrooms] session started for {}", victim.getName().getString());
         return true;
     }
