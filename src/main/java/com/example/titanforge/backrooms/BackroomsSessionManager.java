@@ -81,9 +81,9 @@ public final class BackroomsSessionManager {
 
         target.teleport(
             destination,
-            center.getX() + 7.5,
+            center.getX() + 0.5,
             center.getY() + 1.0,
-            center.getZ() + 5.5,
+            center.getZ() + 0.5,
             target.rotationYaw,
             target.rotationPitch);
 
