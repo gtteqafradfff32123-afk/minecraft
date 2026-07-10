@@ -2,6 +2,8 @@ package com.example.titanforge.backrooms;
 
 import com.example.titanforge.TitanForge;
 import com.example.titanforge.liminal.LiminalDimension;
+import com.example.titanforge.liminal.LiminalManager;
+import com.example.titanforge.liminal.copy.DeltaCopier;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.potion.Effects;
@@ -41,8 +43,14 @@ public final class BackroomsSessionManager {
         BackroomsSession session = new BackroomsSession(id, center, seed);
         SESSIONS.put(id, session);
 
-        TitanForge.LOGGER.info("[backrooms] teleporting player={} to center={}", victim.getName().getString(), center);
-        victim.teleport(backroomsWorld, center.getX() + 0.5, center.getY(), center.getZ() + 0.5, victim.rotationYaw, victim.rotationPitch);
+        // Build floor and wall to prevent falling into void
+        int radius = 100;
+        int floorY = Math.max(0, center.getY() - 41);
+        DeltaCopier.buildFloor(backroomsWorld, center, radius);
+        LiminalManager.buildVoidWall(backroomsWorld, center, radius);
+
+        TitanForge.LOGGER.info("[backrooms] teleporting player={} to center={} floorY={}", victim.getName().getString(), center, floorY);
+        victim.teleport(backroomsWorld, center.getX() + 0.5, floorY + 2, center.getZ() + 0.5, victim.rotationYaw, victim.rotationPitch);
         victim.addPotionEffect(new EffectInstance(Effects.BLINDNESS, Integer.MAX_VALUE, 0, false, false));
         victim.addPotionEffect(new EffectInstance(Effects.SLOWNESS, Integer.MAX_VALUE, 255, false, false));
         victim.addPotionEffect(new EffectInstance(Effects.JUMP_BOOST, Integer.MAX_VALUE, 128, false, false));

@@ -9,6 +9,7 @@ import net.minecraft.entity.Entity;
 import com.example.titanforge.liminal.LiminalDimension;
 import com.example.titanforge.liminal.LiminalManager;
 import com.example.titanforge.liminal.copy.ChunkCopyManager;
+import com.example.titanforge.backrooms.BackroomsSessionManager;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.world.server.ServerWorld;
@@ -157,6 +158,7 @@ public class TitanForge {
                 LiminalManager.forceExit(p, true);
             else
                 LiminalManager.onPlayerDeath(p.getUniqueID());
+            com.example.titanforge.backrooms.BackroomsSessionManager.finish(p.getUniqueID());
         }
     }
 
@@ -169,6 +171,7 @@ public class TitanForge {
     @SubscribeEvent
     public void onLogout(PlayerEvent.PlayerLoggedOutEvent e) {
         LiminalManager.onLogout(e.getPlayer().getUniqueID());
+        BackroomsSessionManager.finish(e.getPlayer().getUniqueID());
     }
 
     @SubscribeEvent

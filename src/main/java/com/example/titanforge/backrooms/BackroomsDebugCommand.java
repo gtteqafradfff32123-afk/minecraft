@@ -35,12 +35,10 @@ public final class BackroomsDebugCommand {
 
                         if (!BackroomsSessionManager.start(player, player)) {
                             context.getSource().sendErrorMessage(
-                                new StringTextComponent("Не удалось запустить Backrooms-сессию."));
+                                new StringTextComponent("§cНе удалось запустить Backrooms-сессию."));
                             return 0;
                         }
 
-                        context.getSource().sendFeedback(
-                            new StringTextComponent("Backrooms-сессия запущена."), false);
                         return 1;
                     }))));
     }
