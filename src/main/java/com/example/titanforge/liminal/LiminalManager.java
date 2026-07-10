@@ -216,6 +216,8 @@ public class LiminalManager {
                 vp.setGameType(net.minecraft.world.GameType.SURVIVAL);
             st.ambientTimer++;
 
+            LiminalAnomalyManager.tick(clone, vp, st);
+
             // Unfreeze after 3 seconds (60 ticks)
             if (st.frozen && st.ambientTimer >= UNFREEZE_TICKS) {
                 st.frozen = false;
@@ -589,7 +591,10 @@ public class LiminalManager {
         String msg = rawMsg.toLowerCase(Locale.ROOT).replace('\u0451', '\u0435');
         boolean stay = containsAny(msg, "\u0441\u0442\u043E\u0439", "\u0441\u0442\u043E\u0438", "\u043D\u0430 \u043C\u0435\u0441\u0442\u0435", "\u043D\u0430\u043C\u0435\u0441\u0442\u0435", "\u043D\u0435 \u0434\u0432\u0438\u0433", "\u043E\u0441\u0442\u0430\u043D\u043E\u0432");
         boolean dontFollow = containsAny(msg, "\u043D\u0435 \u0445\u043E\u0434\u0438 \u0437\u0430 \u043C\u043D\u043E\u0439", "\u043D\u0435 \u0438\u0434\u0438 \u0437\u0430 \u043C\u043D\u043E\u0439", "\u043D\u0435 \u0441\u043B\u0435\u0434\u0438", "\u043D\u0435 \u043F\u0440\u0435\u0441\u043B\u0435\u0434", "\u043E\u0442\u0441\u0442\u0430\u043D\u044C", "\u043D\u0435 \u043F\u0440\u0438\u0431\u043B\u0438\u0436");
-        boolean follow = !dontFollow && !stay && containsAny(msg, "\u0438\u0434\u0438 \u0437\u0430 \u043C\u043D\u043E\u0439", "\u0445\u043E\u0434\u0438 \u0437\u0430 \u043C\u043D\u043E\u0439", "\u0441\u043B\u0435\u0434\u0443\u0439 \u0437\u0430 \u043C\u043D\u043E\u0439", "\u043F\u043E\u0439\u0434\u0435\u043C");
+        boolean follow = !dontFollow && !stay &&
+                (msg.contains("\u043F\u043E\u0434\u043E\u0439\u0434\u0438") || msg.contains("\u0438\u0434\u0438 \u0437\u0430 \u043C\u043D\u043E\u0439")
+                        || msg.contains("\u0441\u043B\u0435\u0434\u0443\u0439") || msg.contains("\u043C\u043E\u0436\u0435\u0448\u044C \u0438\u0434\u0442\u0438")
+                        || msg.contains("\u043D\u0435 \u0441\u0442\u043E\u0439"));
 
         if (st.shadowAggressive) {
             if (stay || dontFollow || follow)
@@ -609,7 +614,14 @@ public class LiminalManager {
         } else if (follow) {
             st.shadowBehavior = SHADOW_BEHAVIOR_STALK;
             st.shadowHoldPos = null;
-            behaviorHint = "\u0442\u044B \u0441\u043D\u043E\u0432\u0430 \u043F\u043E\u0448\u0435\u043B \u0437\u0430 \u0438\u0433\u0440\u043E\u043A\u043E\u043C";
+            Entity rawShadow = vp.world instanceof ServerWorld
+                    ? ((ServerWorld) vp.world).getEntityByUuid(st.shadowId) : null;
+            if (rawShadow instanceof com.example.titanforge.entities.ShadowEntity) {
+                com.example.titanforge.entities.ShadowEntity shadow = (com.example.titanforge.entities.ShadowEntity) rawShadow;
+                shadow.getNavigator().clearPath();
+                shadow.getNavigator().tryMoveToEntityLiving(vp, 1.1D);
+            }
+            behaviorHint = "ты снова следуешь за игроком";
         }
 
         int angerGain = angerFromMessage(msg);
@@ -678,6 +690,9 @@ public class LiminalManager {
             vp.removePotionEffect(Effects.SLOWNESS);
             vp.removePotionEffect(Effects.JUMP_BOOST);
         }
+        LiminalAnomalyManager.clear(
+                vp == null ? null : (ServerWorld) vp.world,
+                st.victim);
         removeAllCopies(vp, st);
     }
 
@@ -713,6 +728,10 @@ public class LiminalManager {
         vp.removePotionEffect(Effects.SLOWNESS);
         vp.removePotionEffect(Effects.JUMP_BOOST);
 
+        com.example.titanforge.NetworkHandler.INSTANCE.send(
+                net.minecraftforge.fml.network.PacketDistributor.PLAYER.with(() -> vp),
+                new com.example.titanforge.StopMusicPacket());
+        LiminalAnomalyManager.clear(clone, st.victim);
         LiminalDialogue.clear(st.victim);
         STATES.remove(st.victim);
 
@@ -798,5 +817,18 @@ public class LiminalManager {
         State st = STATES.get(p.getUniqueID());
         if (st != null && st.markDeadOnRejoin)
             p.attackEntityFrom(net.minecraft.util.DamageSource.OUT_OF_WORLD, Float.MAX_VALUE);
+    }
+
+    public static boolean isProtectedWall(ServerWorld world, BlockPos pos) {
+        if (world.getDimensionKey() != LiminalDimension.LIMINAL_WORLD) return false;
+        if (world.getBlockState(pos).getBlock() != Blocks.BLACK_CONCRETE) return false;
+        for (State state : STATES.values()) {
+            if (state.center == null) continue;
+            double dx = pos.getX() - state.center.getX();
+            double dz = pos.getZ() - state.center.getZ();
+            double distance = Math.sqrt(dx * dx + dz * dz);
+            if (distance >= RADIUS - 2.0D && distance <= RADIUS + 2.0D) return true;
+        }
+        return false;
     }
 }

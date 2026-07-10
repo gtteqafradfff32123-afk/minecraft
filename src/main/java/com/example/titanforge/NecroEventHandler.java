@@ -65,8 +65,8 @@ public class NecroEventHandler {
         player.addPotionEffect(new EffectInstance(Effects.HUNGER, 100, 2));
         sword.damageItem(8, player, p -> {});
 
-        if (target instanceof MobEntity) {
-            ChaosAiManager.apply((MobEntity) target, 200);
+        if (!player.world.isRemote && player instanceof ServerPlayerEntity && target instanceof MobEntity) {
+            ChaosAiManager.apply((MobEntity) target, player, 200);
         } else if (target instanceof ServerPlayerEntity) {
             target.attackEntityFrom(DamageSource.causePlayerDamage(player), 0.5F);
             ((ServerPlayerEntity) target).addPotionEffect(new EffectInstance(Effects.NAUSEA, 200, 0));
@@ -75,18 +75,21 @@ public class NecroEventHandler {
 
     @SubscribeEvent
     public static void onCritLiminal(CriticalHitEvent event) {
+        if (event.getPlayer().world.isRemote) return;
+        if (!(event.getPlayer() instanceof ServerPlayerEntity)) return;
+        if (!(event.getTarget() instanceof LivingEntity)) return;
         if (!event.isVanillaCritical()) return;
         ItemStack sword = event.getPlayer().getHeldItemMainhand();
         if (EnchantmentHelper.getEnchantmentLevel(ModEnchantments.LIMINAL_SLIP.get(), sword) == 0) return;
         LivingEntity victim = (LivingEntity) event.getTarget();
         if (victim == null || victim.getHealth() > victim.getMaxHealth() * 0.5F) return;
-        PlayerEntity owner = event.getPlayer();
+        ServerPlayerEntity owner = (ServerPlayerEntity) event.getPlayer();
         if (owner.getCooldownTracker().hasCooldown(sword.getItem())) return;
 
+        if (!LiminalManager.enter(victim, owner, 360)) return;
         owner.getCooldownTracker().setCooldown(sword.getItem(), 180 * 20);
         owner.setHealth(Math.max(1.0F, owner.getHealth() - 6.0F));
         sword.damageItem(30, owner, p -> {});
-        LiminalManager.enter(victim, owner, 120 + owner.world.rand.nextInt(120));
     }
 
     @SubscribeEvent
@@ -133,21 +136,26 @@ public class NecroEventHandler {
         ItemStack tool = player.getHeldItemMainhand();
         if (EnchantmentHelper.getEnchantmentLevel(ModEnchantments.TRUTH_DISSOLVER.get(), tool) == 0) return;
         if (player.world.isRemote) return;
-        ServerWorld world = (ServerWorld) player.world;
-        BlockPos hit = event.getPos();
-
-        for (BlockPos p : BlockPos.getAllInBoxMutable(hit.add(-1, -1, -1), hit.add(1, 1, 1))) {
-            world.setBlockState(p, Blocks.BLACK_STAINED_GLASS.getDefaultState());
+        if (!(player instanceof ServerPlayerEntity)) return;
+        if (TruthDissolveManager.start((ServerPlayerEntity) player, event.getPos())) {
+            tool.damageItem(12, player, p -> p.sendBreakAnimation(event.getHand()));
+            event.setCanceled(true);
         }
-        tool.getOrCreateTag().putLong("neMineLock", world.getGameTime() + 200);
     }
 
     @SubscribeEvent
     public static void onDoorBlock(PlayerInteractEvent.RightClickBlock event) {
-        if (!LiminalManager.isInside(event.getPlayer())) return;
-        Block b = event.getWorld().getBlockState(event.getPos()).getBlock();
-        if (b instanceof DoorBlock || b instanceof TrapDoorBlock || b instanceof FenceGateBlock)
-            event.setCanceled(true);
+        if (!(event.getPlayer() instanceof ServerPlayerEntity)) return;
+        if (!(event.getWorld() instanceof ServerWorld)) return;
+        Block block = event.getWorld().getBlockState(event.getPos()).getBlock();
+        if (block instanceof DoorBlock) {
+            com.example.titanforge.liminal.LiminalManager.State state =
+                    com.example.titanforge.liminal.LiminalManager.getState(event.getPlayer().getUniqueID());
+            if (state != null && com.example.titanforge.liminal.LiminalAnomalyManager.useDoor(
+                    (ServerWorld) event.getWorld(), (ServerPlayerEntity) event.getPlayer(), event.getPos(), state)) {
+                event.setCanceled(true);
+            }
+        }
     }
 
     @SubscribeEvent
@@ -214,6 +222,7 @@ public class NecroEventHandler {
         ZeusStormManager.tick(world);
         ChaosAiManager.tick();
         DissolveAbsorbTracker.tick();
+        TruthDissolveManager.tick(world);
     }
 
     public static List<LivingEntity> entitiesInCone(LivingEntity origin, double range, double angleDeg) {

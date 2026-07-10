@@ -1,12 +1,14 @@
 {
   "blood_frenzy_breath": {
-    "category": "player",
-    "subtitle": "Heavy breathing",
-    "sounds": [ "titanforge:blood_frenzy_breath" ]
+    "subtitle": "subtitle.titanforge.blood_frenzy_breath",
+    "sounds": [
+      { "name": "titanforge:blood_frenzy_breath", "stream": false }
+    ]
   },
   "danger_around_the_corner": {
-    "category": "ambient",
-    "subtitle": "Rage",
-    "sounds": [ "titanforge:danger_around_the_corner" ]
+    "subtitle": "subtitle.titanforge.danger_around_the_corner",
+    "sounds": [
+      { "name": "titanforge:danger_around_the_corner", "stream": true }
+    ]
   }
 }

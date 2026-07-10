@@ -98,10 +98,7 @@ public class EventHandler {
             }
         }
 
-        CompoundNBT targetNbt = victim.getPersistentData();
-        if (targetNbt.getLong("ChronoFreezeEnd") >= event.getEntityLiving().world.getGameTime()) {
-            float current = targetNbt.getFloat("ChronoAccumulatedDmg");
-            targetNbt.putFloat("ChronoAccumulatedDmg", current + event.getAmount());
+        if (ChronoAnchorManager.captureDamage(event.getEntityLiving(), event.getAmount())) {
             event.setCanceled(true);
             return;
         }
@@ -424,18 +421,7 @@ public class EventHandler {
                 if (chronoLvl > 0 && event.getRayTraceResult() instanceof EntityRayTraceResult
                         && ((EntityRayTraceResult) event.getRayTraceResult()).getEntity() instanceof LivingEntity) {
                     LivingEntity target = (LivingEntity) ((EntityRayTraceResult) event.getRayTraceResult()).getEntity();
-                    CompoundNBT nbt = target.getPersistentData();
-                    nbt.putLong("ChronoFreezeEnd", target.world.getGameTime() + 80L);
-                    nbt.putFloat("ChronoAccumulatedDmg", 0.0F);
-                    nbt.putBoolean("ChronoFrozen", true);
-                    if (target instanceof MobEntity) ((MobEntity) target).setNoAI(true);
-                    target.setNoGravity(true);
-                    target.setMotion(0.0D, 0.0D, 0.0D);
-                    if (!target.world.isRemote) {
-                        ServerWorld sw = (ServerWorld) target.world;
-                        sw.spawnParticle(ParticleTypes.END_ROD, target.getPosX(), target.getPosY() + 1.0, target.getPosZ(), 20, 0.5, 1.0, 0.5, 0.1);
-                        sw.spawnParticle(ParticleTypes.CLOUD, target.getPosX(), target.getPosY() + 1.0, target.getPosZ(), 15, 0.5, 0.8, 0.5, 0.05);
-                    }
+                    ChronoAnchorManager.freeze(target, 80);
                 }
             }
         }
@@ -540,6 +526,8 @@ public class EventHandler {
         World world = player.world;
 
         int clusterLvl = EnchantmentHelper.getEnchantmentLevel(ModEnchantments.CLUSTER_SHOT.get(), bow);
+        boolean flaming = EnchantmentHelper.getEnchantmentLevel(
+                net.minecraft.enchantment.Enchantments.FLAME, bow) > 0;
         if (clusterLvl > 0 && !world.isRemote) {
             for (int i = 0; i < 4; i++) {
                 ArrowEntity cluster = new ArrowEntity(world, player);
@@ -551,38 +539,10 @@ public class EventHandler {
                 ).normalize().scale(2.0);
                 cluster.setMotion(spread);
                 cluster.setDamage(2.0);
+                if (flaming) cluster.setFire(100);
                 world.addEntity(cluster);
             }
             player.getCooldownTracker().setCooldown(bow.getItem(), 40);
-        }
-    }
-
-    @SubscribeEvent
-    public void onBlockAttack(LivingHurtEvent event) {
-        if (!(event.getEntityLiving() instanceof PlayerEntity)) return;
-        PlayerEntity player = (PlayerEntity) event.getEntityLiving();
-        if (!player.isActiveItemStackBlocking()) return;
-        ItemStack weapon = player.getHeldItemOffhand();
-        if (weapon.getItem() != Items.SHIELD) return;
-        int deflectLvl = EnchantmentHelper.getEnchantmentLevel(ModEnchantments.KINETIC_DEFLECTOR.get(), weapon);
-        if (deflectLvl <= 0) return;
-
-        LivingEntity attacker = null;
-        if (event.getSource().getTrueSource() instanceof LivingEntity) {
-            attacker = (LivingEntity) event.getSource().getTrueSource();
-        } else if (event.getSource().getImmediateSource() instanceof LivingEntity) {
-            attacker = (LivingEntity) event.getSource().getImmediateSource();
-        }
-        if (attacker == null) return;
-
-        float reflected = event.getAmount() * 2.0F * deflectLvl;
-        attacker.attackEntityFrom(DamageSource.causePlayerDamage(player), reflected);
-        player.world.playSound(null, player.getPosX(), player.getPosY(), player.getPosZ(),
-            SoundEvents.BLOCK_ANVIL_PLACE, SoundCategory.PLAYERS, 0.8F, 1.5F);
-        if (!player.world.isRemote) {
-            ((ServerWorld)player.world).spawnParticle(ParticleTypes.CRIT,
-                attacker.getPosX(), attacker.getPosY() + 1.5, attacker.getPosZ(),
-                20, 0.3, 0.3, 0.3, 0.1);
         }
     }
 
@@ -772,17 +732,7 @@ public class EventHandler {
             LivingEntity entity = event.getEntityLiving();
             if (entity.world.isRemote) return;
 
-            CompoundNBT eData = entity.getPersistentData();
-            if (eData.contains("ChronoFreezeEnd") && entity.world.getGameTime() >= eData.getLong("ChronoFreezeEnd")) {
-                if (entity instanceof MobEntity) ((MobEntity) entity).setNoAI(false);
-                entity.setNoGravity(false);
-                float acc = eData.getFloat("ChronoAccumulatedDmg");
-                entity.hurtResistantTime = 0;
-                if (acc > 0) entity.attackEntityFrom(ModDamageSources.CHRONO_CRUSH, acc);
-                eData.remove("ChronoFrozen");
-                eData.remove("ChronoFreezeEnd");
-                eData.remove("ChronoAccumulatedDmg");
-            }
+            ChronoAnchorManager.tick(entity);
 
             int timer = entity.getPersistentData().getInt("SolarFireTimer");
             if (timer > 0) {
@@ -801,6 +751,7 @@ public class EventHandler {
     @SubscribeEvent
     public void onLogout(net.minecraftforge.event.entity.player.PlayerEvent.PlayerLoggedOutEvent event) {
         bloodPactProcessing.remove(event.getPlayer().getEntityId());
+        ZeusStormManager.clear(event.getPlayer().getUniqueID());
     }
 
     private void spawnLightning(ServerWorld world, Entity target) {

@@ -20,5 +20,7 @@ public class NetworkHandler {
         INSTANCE.registerMessage(id++, BloodPactSyncPacket.class, BloodPactSyncPacket::encode, BloodPactSyncPacket::decode, BloodPactSyncPacket::handle);
         INSTANCE.registerMessage(id++, ScreenEffectPacket.class, ScreenEffectPacket::encode, ScreenEffectPacket::decode, ScreenEffectPacket::handle);
         INSTANCE.registerMessage(id++, PlayMusicPacket.class, PlayMusicPacket::encode, PlayMusicPacket::decode, PlayMusicPacket::handle);
+        INSTANCE.registerMessage(id++, StopMusicPacket.class,
+                StopMusicPacket::encode, StopMusicPacket::decode, StopMusicPacket::handle);
     }
 }

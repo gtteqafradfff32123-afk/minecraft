@@ -58,6 +58,8 @@ public class TitanForge {
         MinecraftForge.EVENT_BUS.register(this);
         MinecraftForge.EVENT_BUS.register(new CapabilityHandler());
         MinecraftForge.EVENT_BUS.register(new ChunkCopyManager());
+        MinecraftForge.EVENT_BUS.register(new KineticDeflectorHandler());
+        MinecraftForge.EVENT_BUS.register(new com.example.titanforge.liminal.LiminalProtectionHandler());
 
         LiminalAIConfig.register();
     }

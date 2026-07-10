@@ -136,5 +136,7 @@
   "death.attack.titanforge.solarFire": "%1$s испепелён солнечной вспышкой",
   "death.attack.titanforge.plague": "%1$s падает жертвой чумы",
   "death.attack.titanforge.membraneBurst": "%1$s разорван накопленной энергией",
-  "death.attack.titanforge.necroticUndertow": "%1$s иссушён некротической тягой"
+  "death.attack.titanforge.necroticUndertow": "%1$s иссушён некротической тягой",
+  "subtitle.titanforge.blood_frenzy_breath": "Тяжёлое дыхание",
+  "subtitle.titanforge.danger_around_the_corner": "Что-то приближается"
 }

@@ -136,5 +136,7 @@
   "death.attack.titanforge.solarFire": "%1$s was seared by a solar flare",
   "death.attack.titanforge.plague": "%1$s succumbed to the plague",
   "death.attack.titanforge.membraneBurst": "%1$s was torn apart by stored energy",
-  "death.attack.titanforge.necroticUndertow": "%1$s was drained by necrotic undertow"
+  "death.attack.titanforge.necroticUndertow": "%1$s was drained by necrotic undertow",
+  "subtitle.titanforge.blood_frenzy_breath": "Heavy breathing",
+  "subtitle.titanforge.danger_around_the_corner": "Something is approaching"
 }
