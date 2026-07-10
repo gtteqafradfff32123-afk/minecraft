@@ -231,7 +231,8 @@ public class LiminalManager {
         return randomPosInCircle(rand, center);
     }
 
-    private static final int COPY_DESPAWN_TICKS = 1200;
+    private static final int COPY_DESPAWN_TICKS = 300;
+    private static final int MAX_ACTIVE_COPIES = 6;
 
     public static void tick(ServerWorld clone) {
         Iterator<Map.Entry<UUID, State>> it = STATES.entrySet().iterator();
@@ -328,7 +329,8 @@ public class LiminalManager {
                 }
             }
 
-            // Despawn old copies — they disappear and respawn elsewhere
+            // Despawn old copies — they disappear after a short time
+            // Also enforce hard cap on active copies
             if (st.ticks % 20 == 0) {
                 Iterator<Map.Entry<UUID, Integer>> cit = st.spawnTicks.entrySet().iterator();
                 while (cit.hasNext()) {
@@ -340,6 +342,23 @@ public class LiminalManager {
                         st.copyIds.remove(e.getKey());
                         st.activeCopies = Math.max(0, st.activeCopies - 1);
                     }
+                }
+                // Force-remove oldest copies if still over cap
+                while (st.activeCopies > MAX_ACTIVE_COPIES) {
+                    UUID oldest = null;
+                    int oldestTick = Integer.MAX_VALUE;
+                    for (Map.Entry<UUID, Integer> e : st.spawnTicks.entrySet()) {
+                        if (e.getValue() < oldestTick) {
+                            oldestTick = e.getValue();
+                            oldest = e.getKey();
+                        }
+                    }
+                    if (oldest == null) break;
+                    Entity ent = clone.getEntityByUuid(oldest);
+                    if (ent != null) ent.remove();
+                    st.spawnTicks.remove(oldest);
+                    st.copyIds.remove(oldest);
+                    st.activeCopies = Math.max(0, st.activeCopies - 1);
                 }
             }
 
