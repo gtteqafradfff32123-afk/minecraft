@@ -4,10 +4,9 @@ import com.example.titanforge.backrooms.BackroomsModule;
 import com.example.titanforge.backrooms.BackroomsModuleType;
 import net.minecraft.block.Blocks;
 import net.minecraft.util.Direction;
-import net.minecraft.util.math.BlockPos;
 
 public final class EmptyOfficeModule extends BackroomsModule {
-    public EmptyOfficeModule(BlockPos p, Direction f) { super(p, f, 18, 13, 5); }
+    public EmptyOfficeModule(Direction f) { super(f, 18, 13, 5); }
     public BackroomsModuleType type() { return BackroomsModuleType.EMPTY_OFFICE; }
     protected void design() {
         shell(Blocks.OAK_PLANKS.getDefaultState(), Blocks.OAK_PLANKS.getDefaultState(), Blocks.STONE_BRICKS.getDefaultState());

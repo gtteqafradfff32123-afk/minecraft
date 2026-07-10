@@ -4,10 +4,9 @@ import com.example.titanforge.backrooms.BackroomsModule;
 import com.example.titanforge.backrooms.BackroomsModuleType;
 import net.minecraft.block.Blocks;
 import net.minecraft.util.Direction;
-import net.minecraft.util.math.BlockPos;
 
 public final class ForeignSaveModule extends BackroomsModule {
-    public ForeignSaveModule(BlockPos p, Direction f) { super(p, f, 15, 12, 6); }
+    public ForeignSaveModule(Direction f) { super(f, 15, 12, 6); }
     public BackroomsModuleType type() { return BackroomsModuleType.FOREIGN_SAVE; }
     protected void design() {
         shell(Blocks.OAK_PLANKS.getDefaultState(), Blocks.GRASS_BLOCK.getDefaultState(), Blocks.GLASS.getDefaultState());

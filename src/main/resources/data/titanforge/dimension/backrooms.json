@@ -1,0 +1,11 @@
+{
+  "type": "titanforge:backrooms_type",
+  "generator": {
+    "type": "minecraft:flat",
+    "settings": {
+      "layers": [],
+      "biome": "minecraft:the_void",
+      "structures": { "structures": {} }
+    }
+  }
+}

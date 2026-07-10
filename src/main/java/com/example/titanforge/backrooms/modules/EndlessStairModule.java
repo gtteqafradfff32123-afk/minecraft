@@ -4,10 +4,9 @@ import com.example.titanforge.backrooms.BackroomsModule;
 import com.example.titanforge.backrooms.BackroomsModuleType;
 import net.minecraft.block.Blocks;
 import net.minecraft.util.Direction;
-import net.minecraft.util.math.BlockPos;
 
 public final class EndlessStairModule extends BackroomsModule {
-    public EndlessStairModule(BlockPos p, Direction f) { super(p, f, 13, 10, 10); }
+    public EndlessStairModule(Direction f) { super(f, 13, 10, 10); }
     public BackroomsModuleType type() { return BackroomsModuleType.ENDLESS_STAIR; }
     protected void design() {
         shell(Blocks.YELLOW_TERRACOTTA.getDefaultState(), Blocks.STONE_BRICKS.getDefaultState(), Blocks.SMOOTH_SANDSTONE.getDefaultState());

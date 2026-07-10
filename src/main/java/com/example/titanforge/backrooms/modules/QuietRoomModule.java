@@ -4,10 +4,9 @@ import com.example.titanforge.backrooms.BackroomsModule;
 import com.example.titanforge.backrooms.BackroomsModuleType;
 import net.minecraft.block.Blocks;
 import net.minecraft.util.Direction;
-import net.minecraft.util.math.BlockPos;
 
 public final class QuietRoomModule extends BackroomsModule {
-    public QuietRoomModule(BlockPos p, Direction f) { super(p, f, 10, 9, 5); }
+    public QuietRoomModule(Direction f) { super(f, 10, 9, 5); }
     public BackroomsModuleType type() { return BackroomsModuleType.QUIET_ROOM; }
     protected void design() {
         shell(Blocks.LIME_TERRACOTTA.getDefaultState(), Blocks.GREEN_WOOL.getDefaultState(), Blocks.SMOOTH_SANDSTONE.getDefaultState());

@@ -9,6 +9,7 @@ import net.minecraft.entity.Entity;
 import com.example.titanforge.liminal.LiminalDimension;
 import com.example.titanforge.liminal.LiminalManager;
 import com.example.titanforge.liminal.copy.ChunkCopyManager;
+import com.example.titanforge.backrooms.BackroomsDimension;
 import com.example.titanforge.backrooms.BackroomsSessionManager;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
@@ -143,10 +144,13 @@ public class TitanForge {
 
     @SubscribeEvent
     public void onWorldTick(TickEvent.WorldTickEvent e) {
-        if (e.phase == TickEvent.Phase.END
-            && e.world instanceof ServerWorld
-            && ((ServerWorld) e.world).getDimensionKey() == LiminalDimension.LIMINAL_WORLD) {
-            LiminalManager.tick((ServerWorld) e.world);
+        if (e.phase != TickEvent.Phase.END || !(e.world instanceof ServerWorld)) return;
+        ServerWorld sw = (ServerWorld) e.world;
+        if (sw.getDimensionKey() == LiminalDimension.LIMINAL_WORLD) {
+            LiminalManager.tick(sw);
+        }
+        if (sw.getDimensionKey() == BackroomsDimension.WORLD) {
+            BackroomsSessionManager.tick(sw);
         }
     }
 

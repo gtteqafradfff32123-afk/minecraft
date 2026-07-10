@@ -1,15 +1,12 @@
 package com.example.titanforge.backrooms;
 
 import com.example.titanforge.TitanForge;
-import com.example.titanforge.liminal.LiminalDimension;
-import com.example.titanforge.liminal.LiminalManager;
-import com.example.titanforge.liminal.copy.DeltaCopier;
 import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.potion.EffectInstance;
-import net.minecraft.potion.Effects;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.server.ServerWorld;
+import net.minecraft.world.server.TicketType;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -18,6 +15,7 @@ import java.util.UUID;
 
 public final class BackroomsSessionManager {
     private static final Map<UUID, BackroomsSession> SESSIONS = new HashMap<>();
+    private static final Map<UUID, BackroomsGenerator> GENERATORS = new HashMap<>();
 
     private BackroomsSessionManager() {}
 
@@ -29,48 +27,96 @@ public final class BackroomsSessionManager {
         return SESSIONS.get(playerId);
     }
 
-    public static boolean start(ServerPlayerEntity victim, ServerPlayerEntity owner) {
-        UUID id = victim.getUniqueID();
-        if (SESSIONS.containsKey(id)) return false;
-        ServerWorld backroomsWorld = LiminalDimension.get(victim.getServer());
-        if (backroomsWorld == null) {
-            victim.sendStatusMessage(new StringTextComponent("§cИзмерение Backrooms не загружено (нужен новый мир или datapack)."), true);
-            TitanForge.LOGGER.warn("[backrooms] dimension not available for {}", victim.getName().getString());
+    private static boolean canStart(ServerPlayerEntity target) {
+        return !SESSIONS.containsKey(target.getUniqueID());
+    }
+
+    private static int findFreeSlot() {
+        boolean[] used = new boolean[256];
+        for (BackroomsSession s : SESSIONS.values()) {
+            int slot = s.center.getX() / 512;
+            if (slot >= 0 && slot < used.length) used[slot] = true;
+        }
+        for (int i = 0; i < used.length; i++) {
+            if (!used[i]) return i;
+        }
+        return SESSIONS.size();
+    }
+
+    public static boolean start(ServerPlayerEntity target, ServerPlayerEntity owner) {
+        if (!canStart(target)) return false;
+
+        ServerWorld destination = BackroomsDimension.get(target.getServer());
+        if (destination == null) {
+            target.sendStatusMessage(new StringTextComponent("§cИзмерение Backrooms не загружено (нужен новый мир или datapack)."), true);
+            TitanForge.LOGGER.warn("[backrooms] dimension not available for {}", target.getName().getString());
             return false;
         }
-        BlockPos center = victim.getPosition();
-        long seed = victim.world.rand.nextLong();
-        BackroomsSession session = new BackroomsSession(id, center, seed);
-        SESSIONS.put(id, session);
 
-        // Build floor and wall to prevent falling into void
-        int radius = 100;
-        int floorY = Math.max(0, center.getY() - 41);
-        DeltaCopier.buildFloor(backroomsWorld, center, radius);
-        LiminalManager.buildVoidWall(backroomsWorld, center, radius);
+        int slot = findFreeSlot();
+        BlockPos center = new BlockPos(slot * 512, 64, 0);
 
-        TitanForge.LOGGER.info("[backrooms] teleporting player={} to center={} floorY={}", victim.getName().getString(), center, floorY);
-        victim.teleport(backroomsWorld, center.getX() + 0.5, floorY + 2, center.getZ() + 0.5, victim.rotationYaw, victim.rotationPitch);
-        victim.addPotionEffect(new EffectInstance(Effects.BLINDNESS, Integer.MAX_VALUE, 0, false, false));
-        victim.addPotionEffect(new EffectInstance(Effects.SLOWNESS, Integer.MAX_VALUE, 255, false, false));
-        victim.addPotionEffect(new EffectInstance(Effects.JUMP_BOOST, Integer.MAX_VALUE, 128, false, false));
-        victim.sendStatusMessage(new StringTextComponent("§8Ты вошёл в Backrooms. Не доверяй выходам."), false);
-        TitanForge.LOGGER.info("[backrooms] session started for {}", victim.getName().getString());
+        BackroomsSession session = new BackroomsSession(
+            target.getUniqueID(),
+            owner.getUniqueID(),
+            target.world.getDimensionKey(),
+            target.getPosition(),
+            target.world.rand.nextLong(),
+            center);
+
+        BackroomsGenerator generator = new BackroomsGenerator(session);
+
+        SESSIONS.put(target.getUniqueID(), session);
+        GENERATORS.put(target.getUniqueID(), generator);
+
+        generator.start();
+        generator.ensureAhead(6);
+        generator.buildInitialRoom(destination);
+
+        destination.getChunkProvider().registerTicket(
+            TicketType.POST_TELEPORT,
+            new ChunkPos(center),
+            2,
+            target.getEntityId());
+
+        target.teleport(
+            destination,
+            center.getX() + 7.5,
+            center.getY() + 1.0,
+            center.getZ() + 5.5,
+            target.rotationYaw,
+            target.rotationPitch);
+
+        target.sendStatusMessage(new StringTextComponent("§8Ты вошёл в Backrooms. Не доверяй выходам."), false);
+        TitanForge.LOGGER.info("[backrooms] session started for {} slot={}", target.getName().getString(), slot);
         return true;
     }
 
     public static void tick(ServerWorld world) {
+        Iterator<Map.Entry<UUID, BackroomsGenerator>> git = GENERATORS.entrySet().iterator();
+        while (git.hasNext()) {
+            Map.Entry<UUID, BackroomsGenerator> ge = git.next();
+            BackroomsSession s = SESSIONS.get(ge.getKey());
+            if (s == null || s.finished) {
+                git.remove();
+                continue;
+            }
+            ge.getValue().tick(world);
+        }
+
         Iterator<Map.Entry<UUID, BackroomsSession>> it = SESSIONS.entrySet().iterator();
         while (it.hasNext()) {
             Map.Entry<UUID, BackroomsSession> entry = it.next();
             BackroomsSession s = entry.getValue();
             if (s.finished) {
                 it.remove();
+                GENERATORS.remove(entry.getKey());
                 continue;
             }
             ServerPlayerEntity player = world.getServer().getPlayerList().getPlayerByUUID(s.playerId);
             if (player == null || !player.isAlive()) {
                 it.remove();
+                GENERATORS.remove(entry.getKey());
                 continue;
             }
             s.ticks++;
@@ -100,6 +146,7 @@ public final class BackroomsSessionManager {
             player.getPersistentData().remove("TF_ArchivistSpawned");
         }
         SESSIONS.remove(playerId);
+        GENERATORS.remove(playerId);
         TitanForge.LOGGER.info("[backrooms] session finished for {}", playerId);
     }
 }

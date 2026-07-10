@@ -4,10 +4,9 @@ import com.example.titanforge.backrooms.BackroomsModule;
 import com.example.titanforge.backrooms.BackroomsModuleType;
 import net.minecraft.block.Blocks;
 import net.minecraft.util.Direction;
-import net.minecraft.util.math.BlockPos;
 
 public final class ServiceCorridorModule extends BackroomsModule {
-    public ServiceCorridorModule(BlockPos p, Direction f) { super(p, f, 22, 6, 5); }
+    public ServiceCorridorModule(Direction f) { super(f, 22, 6, 5); }
     public BackroomsModuleType type() { return BackroomsModuleType.SERVICE_CORRIDOR; }
     protected void design() {
         shell(Blocks.STONE_BRICKS.getDefaultState(), Blocks.STONE_BRICKS.getDefaultState(), Blocks.STONE_BRICKS.getDefaultState());

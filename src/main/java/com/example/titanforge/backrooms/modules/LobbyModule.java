@@ -4,10 +4,9 @@ import com.example.titanforge.backrooms.BackroomsModule;
 import com.example.titanforge.backrooms.BackroomsModuleType;
 import net.minecraft.block.Blocks;
 import net.minecraft.util.Direction;
-import net.minecraft.util.math.BlockPos;
 
 public final class LobbyModule extends BackroomsModule {
-    public LobbyModule(BlockPos p, Direction f) { super(p, f, 14, 11, 5); }
+    public LobbyModule(Direction f) { super(f, 14, 11, 5); }
     public BackroomsModuleType type() { return BackroomsModuleType.LOBBY; }
     protected void design() {
         shell(Blocks.YELLOW_WOOL.getDefaultState(), Blocks.YELLOW_WOOL.getDefaultState(), Blocks.SMOOTH_SANDSTONE.getDefaultState());

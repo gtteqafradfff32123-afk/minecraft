@@ -4,10 +4,9 @@ import com.example.titanforge.backrooms.BackroomsModule;
 import com.example.titanforge.backrooms.BackroomsModuleType;
 import net.minecraft.block.Blocks;
 import net.minecraft.util.Direction;
-import net.minecraft.util.math.BlockPos;
 
 public final class FalseExitModule extends BackroomsModule {
-    public FalseExitModule(BlockPos p, Direction f) { super(p, f, 9, 8, 5); }
+    public FalseExitModule(Direction f) { super(f, 9, 8, 5); }
     public BackroomsModuleType type() { return BackroomsModuleType.FALSE_EXIT; }
     protected void design() {
         shell(Blocks.SMOOTH_SANDSTONE.getDefaultState(), Blocks.YELLOW_WOOL.getDefaultState(), Blocks.SMOOTH_SANDSTONE.getDefaultState());

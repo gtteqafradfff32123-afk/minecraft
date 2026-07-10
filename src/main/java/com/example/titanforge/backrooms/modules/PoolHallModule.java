@@ -4,10 +4,9 @@ import com.example.titanforge.backrooms.BackroomsModule;
 import com.example.titanforge.backrooms.BackroomsModuleType;
 import net.minecraft.block.Blocks;
 import net.minecraft.util.Direction;
-import net.minecraft.util.math.BlockPos;
 
 public final class PoolHallModule extends BackroomsModule {
-    public PoolHallModule(BlockPos p, Direction f) { super(p, f, 20, 14, 6); }
+    public PoolHallModule(Direction f) { super(f, 20, 14, 6); }
     public BackroomsModuleType type() { return BackroomsModuleType.POOL_HALL; }
     protected void design() {
         shell(Blocks.QUARTZ_BRICKS.getDefaultState(), Blocks.SMOOTH_QUARTZ.getDefaultState(), Blocks.SEA_LANTERN.getDefaultState());

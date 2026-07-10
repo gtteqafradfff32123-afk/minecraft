@@ -4,10 +4,9 @@ import com.example.titanforge.backrooms.BackroomsModule;
 import com.example.titanforge.backrooms.BackroomsModuleType;
 import net.minecraft.block.Blocks;
 import net.minecraft.util.Direction;
-import net.minecraft.util.math.BlockPos;
 
 public final class VoidSliceModule extends BackroomsModule {
-    public VoidSliceModule(BlockPos p, Direction f) { super(p, f, 5, 18, 8); }
+    public VoidSliceModule(Direction f) { super(f, 5, 18, 8); }
     public BackroomsModuleType type() { return BackroomsModuleType.VOID_SLICE; }
     protected void design() {
         shell(Blocks.BLACK_CONCRETE.getDefaultState(), Blocks.OBSIDIAN.getDefaultState(), Blocks.BLACK_CONCRETE.getDefaultState());
