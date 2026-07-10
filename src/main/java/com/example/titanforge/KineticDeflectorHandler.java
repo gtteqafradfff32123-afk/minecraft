@@ -38,25 +38,22 @@ public final class KineticDeflectorHandler {
         LivingEntity attacker = (LivingEntity) trueSource;
         if (!isInBlockingArc(defender, event.getSource())) return;
 
-        float reflected = Math.max(0.0F, event.getAmount()) * 2.0F * level;
-        if (reflected <= 0.0F) return;
+        float reflected = Math.min(8.0F, Math.max(1.0F, event.getAmount() * 1.5F));
+        attacker.hurtResistantTime = 0;
+        boolean hit = attacker.attackEntityFrom(
+                DamageSource.causePlayerDamage(defender).setDamageBypassesArmor(), reflected);
+        if (!hit) return;
 
-        REFLECTING.add(attacker.getUniqueID());
-        try {
-            attacker.hurtResistantTime = 0;
-            boolean hit = attacker.attackEntityFrom(
-                    DamageSource.causePlayerDamage(defender).setDamageBypassesArmor(), reflected);
-            if (!hit) return;
+        int durabilityCost = Math.min(12, 3 + (int) Math.ceil(event.getAmount() * 0.75F));
+        active.damageItem(durabilityCost, defender,
+                p -> p.sendBreakAnimation(defender.getActiveHand()));
 
-            ServerWorld world = (ServerWorld) defender.world;
-            world.playSound(null, defender.getPosition(), SoundEvents.BLOCK_ANVIL_PLACE,
-                    SoundCategory.PLAYERS, 0.75F, 1.45F);
-            world.spawnParticle(ParticleTypes.CRIT,
-                    attacker.getPosX(), attacker.getPosY() + attacker.getHeight() * 0.6D, attacker.getPosZ(),
-                    20, 0.3D, 0.4D, 0.3D, 0.08D);
-        } finally {
-            REFLECTING.remove(attacker.getUniqueID());
-        }
+        ServerWorld world = (ServerWorld) defender.world;
+        world.playSound(null, defender.getPosition(), SoundEvents.BLOCK_ANVIL_PLACE,
+                SoundCategory.PLAYERS, 0.75F, 1.45F);
+        world.spawnParticle(ParticleTypes.CRIT,
+                attacker.getPosX(), attacker.getPosY() + attacker.getHeight() * 0.6D, attacker.getPosZ(),
+                20, 0.3D, 0.4D, 0.3D, 0.08D);
     }
 
     private boolean isInBlockingArc(PlayerEntity defender, DamageSource source) {

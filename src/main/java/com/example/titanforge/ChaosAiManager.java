@@ -38,6 +38,8 @@ public final class ChaosAiManager {
         ChaosState old = ACTIVE.remove(mob.getUniqueID());
         if (old != null) old.mob.targetSelector.removeGoal(old.targetGoal);
 
+        PsychoticBreakVisuals.start(mob);
+
         Goal chaosGoal = new NearestAttackableTargetGoal<>(mob, LivingEntity.class, 1, true, false,
                 candidate -> isValidTarget(candidate, mob, caster.getUniqueID()));
         mob.targetSelector.addGoal(0, chaosGoal);
@@ -56,11 +58,20 @@ public final class ChaosAiManager {
                 continue;
             }
             if (mob.world.getGameTime() >= state.endTick) {
+                PsychoticBreakVisuals.stop(mob);
                 mob.targetSelector.removeGoal(state.targetGoal);
                 if (state.oldTarget != null && state.oldTarget.isAlive()) mob.setAttackTarget(state.oldTarget);
                 else mob.setAttackTarget(null);
                 it.remove();
                 continue;
+            }
+
+            PsychoticBreakVisuals.tick(mob);
+
+            LivingEntity forced = findNearest(mob, state.caster);
+            if (forced != null) {
+                CustomNpcChaosBridge.forceTarget(mob, forced);
+                CustomNpcChaosBridge.forceMeleePulse(mob, forced);
             }
 
             LivingEntity current = mob.getAttackTarget();

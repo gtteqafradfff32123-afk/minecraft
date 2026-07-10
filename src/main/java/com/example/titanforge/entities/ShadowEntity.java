@@ -38,6 +38,13 @@ public class ShadowEntity extends MobEntity {
             EntityDataManager.createKey(ShadowEntity.class, DataSerializers.BOOLEAN);
     private GameProfile cachedProfile;
     private int spawnCopyTimer = 0;
+    private int shellHits;
+    private int invulnerabilityTicks;
+    private int abilityCooldown;
+    private int vanishTicks;
+    private int attackWindup;
+    private int currentAbility;
+    private BlockPos ritualCenter;
 
     public ShadowEntity(EntityType<? extends MobEntity> type, World world) {
         super(type, world);
@@ -112,10 +119,29 @@ public class ShadowEntity extends MobEntity {
         return this.dataManager.get(AGGRESSIVE);
     }
 
+    public int getAbilityCooldown() { return abilityCooldown; }
+    public void setAbilityCooldown(int value) { abilityCooldown = value; }
+    public int getAttackWindup() { return attackWindup; }
+    public void setAttackWindup(int value) { attackWindup = value; }
+    public int getCurrentAbility() { return currentAbility; }
+    public void setCurrentAbility(int value) { currentAbility = value; }
+
     @Override
     public void livingTick() {
         super.livingTick();
         if (world.isRemote) return;
+
+        if (invulnerabilityTicks > 0) invulnerabilityTicks--;
+        if (abilityCooldown > 0) abilityCooldown--;
+        if (vanishTicks > 0) {
+            vanishTicks--;
+            setInvisible(true);
+            setNoAI(true);
+            if (vanishTicks == 0) {
+                setInvisible(false);
+                setNoAI(false);
+            }
+        }
 
         if (isTarget() && ticksExisted % 40 == 0) {
             world.playSound(null, getPosition(),
@@ -131,11 +157,25 @@ public class ShadowEntity extends MobEntity {
                 LiminalManager.spawnCopyNearShadow((ServerWorld) world, this);
             }
         }
+
+        if (!world.isRemote && isAggressive()) {
+            com.example.titanforge.liminal.ShadowCombatManager.tick(this);
+        }
     }
 
     @Override
     public boolean onLivingFall(float dist, float mult) {
         return false;
+    }
+
+    private int requiredShellHits(LiminalManager.State state) {
+        switch (state.shadowPhase) {
+            case AWAKENED: return 3;
+            case HUNTER: return 5;
+            case FRACTURED: return 7;
+            case FINAL: return 9;
+            default: return 1;
+        }
     }
 
     @Override
@@ -146,36 +186,31 @@ public class ShadowEntity extends MobEntity {
         if (!world.isRemote && source.getTrueSource() instanceof ServerPlayerEntity) {
             ServerPlayerEntity attacker = (ServerPlayerEntity) source.getTrueSource();
 
-            // Immune to arrows — teleport closer instead
-            if (source.getImmediateSource() instanceof AbstractArrowEntity || source.getImmediateSource() instanceof TridentEntity) {
-                world.playSound(null, getPosition(), SoundEvents.ENTITY_ENDERMAN_TELEPORT,
-                    SoundCategory.HOSTILE, 0.8F, 0.6F);
-                ((ServerWorld) world).spawnParticle(ParticleTypes.PORTAL,
-                    getPosX(), getPosY() + 1, getPosZ(), 40, 0.4, 0.8, 0.4, 0.3);
-                // Move 5-10 blocks closer to attacker
-                Vector3d dir = attacker.getPositionVec().subtract(getPositionVec()).normalize();
-                double newX = getPosX() + dir.x * (5 + world.rand.nextInt(6));
-                double newZ = getPosZ() + dir.z * (5 + world.rand.nextInt(6));
-                BlockPos ground = new BlockPos(newX, getPosY(), newZ);
-                while (ground.getY() > 0 && world.isAirBlock(ground)) ground = ground.down();
-                setLocationAndAngles(newX, ground.getY() + 1, newZ, rotationYaw, rotationPitch);
+            if (!isAggressive()) {
+                setAggressive(true);
+                if (source.getTrueSource() instanceof ServerPlayerEntity) {
+                    LiminalManager.onFirstHit(attacker);
+                }
                 return false;
             }
 
-            // First hit detection
-            if (!isAggressive()) {
-                setAggressive(true);
-                LiminalManager.onFirstHit(attacker);
-            }
+            if (invulnerabilityTicks > 0) return false;
+            if (!(source.getTrueSource() instanceof ServerPlayerEntity)) return false;
 
-            world.playSound(null, getPosition(), SoundEvents.ENTITY_WITHER_HURT,
-                SoundCategory.HOSTILE, 0.8F, 0.5F);
-            ((ServerWorld) world).spawnParticle(ParticleTypes.PORTAL,
-                getPosX(), getPosY() + 1, getPosZ(), 40, 0.4, 0.8, 0.4, 0.3);
+            ServerPlayerEntity serverAttacker = (ServerPlayerEntity) source.getTrueSource();
+            LiminalManager.State state = LiminalManager.getState(serverAttacker.getUniqueID());
+            if (state == null) return false;
 
-            LiminalManager.onShadowKilled(attacker);
-            this.remove();
-            return true;
+            shellHits++;
+            invulnerabilityTicks = 24;
+            com.example.titanforge.liminal.ShadowCombatManager.onShellHit(this, serverAttacker, state);
+
+            if (shellHits < requiredShellHits(state)) return false;
+
+            shellHits = 0;
+            state.shadowLivesBroken++;
+            com.example.titanforge.liminal.ShadowCombatManager.breakShell(this, serverAttacker, state);
+            return false;
         }
         return false;
     }

@@ -473,12 +473,7 @@ public class EventHandler {
                 sw.spawnParticle(ParticleTypes.CLOUD, x, hitVec.y + 1.0, z, 1, 0, 0.2, 0, 0.03);
                 sw.spawnParticle(ParticleTypes.WHITE_ASH, x, hitVec.y + 1.2, z, 1, 0, 0.25, 0, 0.02);
             }
-            for (LivingEntity e : sw.getEntitiesWithinAABB(LivingEntity.class, new AxisAlignedBB(hitVec.add(-5, -5, -5), hitVec.add(5, 5, 5)))) {
-                if (e != player) {
-                    Vector3d pull = new Vector3d(hitVec.x - e.getPosX(), hitVec.y - e.getPosY(), hitVec.z - e.getPosZ()).normalize().scale(0.8);
-                    e.addVelocity(pull.x, pull.y + 0.45, pull.z);
-                }
-            }
+            VoidVortexManager.spawn(sw, hitVec, player);
         }
 
         // Ricochet

@@ -44,7 +44,7 @@ public class NecroEventHandler {
         if (player.getCooldownTracker().hasCooldown(bow.getItem())) return;
         if (!player.abilities.isCreativeMode && countArrows(player) < 8) return;
 
-        player.getCooldownTracker().setCooldown(bow.getItem(), 30 * 20);
+        player.getCooldownTracker().setCooldown(bow.getItem(), 75 * 20);
         if (!player.abilities.isCreativeMode) consumeArrows(player, 8);
         bow.damageItem(25, player, p -> {});
         ZeusStormManager.begin((ServerPlayerEntity) player);
@@ -61,7 +61,7 @@ public class NecroEventHandler {
         if (target instanceof net.minecraft.entity.boss.WitherEntity ||
             target instanceof net.minecraft.entity.boss.dragon.EnderDragonEntity) return;
 
-        player.getCooldownTracker().setCooldown(sword.getItem(), 30 * 20);
+        player.getCooldownTracker().setCooldown(sword.getItem(), 15 * 20);
         player.addPotionEffect(new EffectInstance(Effects.HUNGER, 100, 2));
         sword.damageItem(8, player, p -> {});
 
@@ -223,6 +223,7 @@ public class NecroEventHandler {
         ChaosAiManager.tick();
         DissolveAbsorbTracker.tick();
         TruthDissolveManager.tick(world);
+        VoidVortexManager.tick(world);
     }
 
     public static List<LivingEntity> entitiesInCone(LivingEntity origin, double range, double angleDeg) {

@@ -46,10 +46,16 @@ public final class LiminalAnomalyManager {
         state.timer++;
         tickTemporary(world, state);
 
-        if (state.timer % 160 == 0) spawnFootprints(world, player, liminal);
-        if (state.timer % 700 == 0 && state.fakeExit == null) spawnFalseExit(world, player, liminal, state);
-        if (state.timer % 900 == 0) spawnDisappearingWriting(world, player, liminal, state);
-        if (state.timer % 1200 == 0) spawnErroneousRoom(world, player, liminal, state);
+        int intensity = liminal.anomalyIntensity;
+        int footprintsInterval = Math.max(40, 160 - intensity * 10);
+        int falseExitInterval = Math.max(200, 700 - intensity * 40);
+        int writingInterval = Math.max(160, 900 - intensity * 55);
+        int roomInterval = Math.max(250, 1200 - intensity * 70);
+
+        if (state.timer % footprintsInterval == 0) spawnFootprints(world, player, liminal);
+        if (state.timer % falseExitInterval == 0 && state.fakeExit == null) spawnFalseExit(world, player, liminal, state);
+        if (state.timer % writingInterval == 0) spawnDisappearingWriting(world, player, liminal, state);
+        if (state.timer % roomInterval == 0) spawnErroneousRoom(world, player, liminal, state);
     }
 
     public static boolean useDoor(ServerWorld world, ServerPlayerEntity player, BlockPos door,

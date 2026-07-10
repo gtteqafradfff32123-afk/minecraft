@@ -83,6 +83,23 @@ public class LiminalManager {
         public UUID shadowId;
         public List<UUID> copyIds = new ArrayList<>();
         public Map<UUID, Integer> spawnTicks = new HashMap<>();
+        public int directorTimer = 0;
+        public int independentCopyTimer = 0;
+        public int anomalyIntensity = 1;
+        public int collapseStage = 0;
+        public ShadowPhase shadowPhase = ShadowPhase.FRIENDLY;
+        public int shadowLivesBroken = 0;
+        public int shadowAbilityCooldown = 0;
+        public int shadowHuntPressure = 0;
+        public int shadowFinalTimer = 0;
+        public UUID markedCopyId;
+        public BlockPos lastSafePlayerPos;
+        public final List<BlockPos> finalAnchors = new ArrayList<>();
+        public boolean finalRitualStarted = false;
+        public int arrowsUsed;
+        public int shieldBlocks;
+        public int sprintTicks;
+        public int timeLookingAtShadow;
     }
 
     private static final Map<UUID, State> STATES = new HashMap<>();
@@ -152,28 +169,43 @@ public class LiminalManager {
         st.shadowSpawned = spawnShadow(job.target, st, vp);
     }
 
-    public static void buildVoidWall(ServerWorld clone, BlockPos center, int radius) {
-        int minY = 0, maxY = 200;
-        plotCircle(clone, center, radius, Blocks.BLACK_CONCRETE.getDefaultState(), minY, maxY);
+    public static void buildVoidWall(ServerWorld world, BlockPos center, int radius) {
+        int outer = radius + 1;
+        int inner = radius - 2;
+        int outerSq = outer * outer;
+        int innerSq = inner * inner;
+
+        for (int x = -outer; x <= outer; x++) {
+            for (int z = -outer; z <= outer; z++) {
+                int distanceSq = x * x + z * z;
+                if (distanceSq < innerSq || distanceSq > outerSq) continue;
+                for (int y = 0; y <= 200; y++) {
+                    world.setBlockState(center.add(x, y - center.getY(), z),
+                            Blocks.BLACK_CONCRETE.getDefaultState(), 2);
+                }
+            }
+        }
     }
 
-    private static void plotCircle(ServerWorld clone, BlockPos center, int r, BlockState state, int minY, int maxY) {
-        if (r < 0) return;
-        int x = r, y = 0, err = 0;
-        while (x >= y) {
-            setWallColumn(clone, center.getX() + x, center.getZ() + y, state, minY, maxY);
-            setWallColumn(clone, center.getX() + y, center.getZ() + x, state, minY, maxY);
-            setWallColumn(clone, center.getX() - y, center.getZ() + x, state, minY, maxY);
-            setWallColumn(clone, center.getX() - x, center.getZ() + y, state, minY, maxY);
-            setWallColumn(clone, center.getX() - x, center.getZ() - y, state, minY, maxY);
-            setWallColumn(clone, center.getX() - y, center.getZ() - x, state, minY, maxY);
-            setWallColumn(clone, center.getX() + y, center.getZ() - x, state, minY, maxY);
-            setWallColumn(clone, center.getX() + x, center.getZ() - y, state, minY, maxY);
-            y++;
-            err += 1 + 2 * y;
-            if (2 * (err - x) + 1 > 0) {
-                x--;
-                err += 1 - 2 * x;
+    private static void repairWallSlice(ServerWorld world, State state) {
+        int outer = RADIUS + 1;
+        int inner = RADIUS - 2;
+        int outerSq = outer * outer;
+        int innerSq = inner * inner;
+        int startY = (state.ambientTimer / 20 * 10) % 201;
+        int endY = Math.min(200, startY + 9);
+
+        for (int x = -outer; x <= outer; x++) {
+            for (int z = -outer; z <= outer; z++) {
+                int distanceSq = x * x + z * z;
+                if (distanceSq < innerSq || distanceSq > outerSq) continue;
+                for (int y = startY; y <= endY; y++) {
+                    BlockPos pos = new BlockPos(
+                            state.center.getX() + x, y, state.center.getZ() + z);
+                    if (world.getBlockState(pos).getBlock() != Blocks.BLACK_CONCRETE) {
+                        world.setBlockState(pos, Blocks.BLACK_CONCRETE.getDefaultState(), 2);
+                    }
+                }
             }
         }
     }
@@ -311,25 +343,18 @@ public class LiminalManager {
                 }
             }
 
+            // Director-based copy spawning
+            LiminalDirector.tick(clone, vp, st);
+
+            // Wall self-repair every 10 seconds
+            if (st.ticks % 200 == 0) {
+                repairWallSlice(clone, st);
+            }
+
             // Second half (after 3 minutes = 3600 ticks)
             if (!st.secondHalfAnomalies && st.ticks >= 3600) {
                 st.secondHalfAnomalies = true;
                 sendCopyMessage(vp, "\u041C\u0438\u0440 \u0440\u0443\u0448\u0438\u0442\u0441\u044F...");
-            }
-
-            // Auto-spawn copies in second half
-            if (st.secondHalfAnomalies && st.ticks % (30 * 20) == 0) {
-                int copies = st.copiesKilled >= 3 ? 2 : 1;
-                for (int i = 0; i < copies; i++) {
-                    double r = clone.rand.nextDouble();
-                    if (r < 0.33) {
-                        spawnGhostMob(clone, st, vp);
-                    } else if (r < 0.66) {
-                        spawnArmedCopy(clone, st, vp);
-                    } else {
-                        spawnArmedSkeleton(clone, st, vp);
-                    }
-                }
             }
 
             // World destruction — every 3 seconds after first 10 seconds
@@ -349,13 +374,12 @@ public class LiminalManager {
                 sendRageMusicPacket(vp);
             }
 
-            // Exit on 6 kills or timeout
-            if (st.ticks >= st.durationTicks || st.copiesKilled >= KILLS_TO_ESCAPE) {
-                boolean early = st.copiesKilled >= KILLS_TO_ESCAPE && st.ticks < st.durationTicks;
+            // Exit on 6 kills (no more auto-timeout)
+            if (st.copiesKilled >= KILLS_TO_ESCAPE) {
                 ServerPlayerEntity finalVp = vp;
                 State finalSt = st;
                 vp.server.execute(() -> {
-                    exit(finalVp, finalSt, early);
+                    exit(finalVp, finalSt, true);
                 });
                 it.remove();
             }
@@ -448,6 +472,43 @@ public class LiminalManager {
             TitanForge.LOGGER.info("[liminal] shadow boss spawned at {},{},{}", sx, owner.getPosY(), sz);
         }
         return ok;
+    }
+
+    public static void spawnDirectorCopy(ServerWorld world, LiminalManager.State state, ServerPlayerEntity player, int stage) {
+        PlayerCopyEntity copy = com.example.titanforge.ModEntities.PLAYER_COPY.get().create(world);
+        if (copy == null) return;
+        double[] pos = spawnPos(world.rand, state.center, player);
+        copy.setLocationAndAngles(pos[0], state.center.getY() + 1, pos[1], 0f, 0f);
+        copy.setOwner(player.getUniqueID());
+        boolean ok = world.addEntity(copy);
+        if (ok) {
+            state.activeCopies++;
+            state.copyIds.add(copy.getUniqueID());
+            state.spawnTicks.put(copy.getUniqueID(), state.ticks);
+            world.spawnParticle(ParticleTypes.SMOKE,
+                pos[0], state.center.getY() + 1, pos[1], 15, 0.3, 0.5, 0.3, 0.02);
+        }
+    }
+
+    public static void markNearestCopy(ServerWorld world, LiminalManager.State state, ServerPlayerEntity player) {
+        if (state.copyIds.isEmpty()) return;
+        UUID nearestId = null;
+        double nearestDist = Double.MAX_VALUE;
+        for (UUID id : state.copyIds) {
+            Entity e = world.getEntityByUuid(id);
+            if (e == null || !e.isAlive()) continue;
+            double dist = e.getDistanceSq(player);
+            if (dist < nearestDist) {
+                nearestDist = dist;
+                nearestId = id;
+            }
+        }
+        if (nearestId != null) {
+            state.markedCopyId = nearestId;
+            world.spawnParticle(ParticleTypes.END_ROD,
+                player.getPosX(), player.getPosY() + 1.0D, player.getPosZ(),
+                20, 0.5D, 0.5D, 0.5D, 0.02D);
+        }
     }
 
     public static void spawnCopyNearShadow(ServerWorld w, ShadowEntity shadow) {
@@ -575,7 +636,9 @@ public class LiminalManager {
 
     private static void makeShadowAggressive(ServerPlayerEntity vp, State st) {
         st.firstHit = true;
+        st.shadowAwakened = true;
         st.shadowAggressive = true;
+        st.shadowPhase = ShadowPhase.AWAKENED;
         st.shadowBehavior = SHADOW_BEHAVIOR_STALK;
         st.shadowHoldPos = null;
         if (st.shadowId != null && vp.world instanceof ServerWorld) {
