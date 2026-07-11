@@ -138,5 +138,10 @@
   "death.attack.titanforge.membraneBurst": "%1$s was torn apart by stored energy",
   "death.attack.titanforge.necroticUndertow": "%1$s was drained by necrotic undertow",
   "subtitle.titanforge.blood_frenzy_breath": "Heavy breathing",
-  "subtitle.titanforge.danger_around_the_corner": "Something is approaching"
+  "subtitle.titanforge.danger_around_the_corner": "Something is approaching",
+
+  "message.titanforge.layout_error": "Layout Error %s/3",
+  "message.titanforge.false_exit": "The exit remembered you",
+  "message.titanforge.quiet_room_end": "The silence ended",
+  "entity.titanforge.archivist": "Archivist"
 }

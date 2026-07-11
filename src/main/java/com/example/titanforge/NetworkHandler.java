@@ -1,6 +1,9 @@
 package com.example.titanforge;
 
+import com.example.titanforge.backrooms.BackroomsSyncPacket;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.fml.network.NetworkDirection;
 import net.minecraftforge.fml.network.NetworkRegistry;
 import net.minecraftforge.fml.network.simple.SimpleChannel;
 
@@ -22,5 +25,11 @@ public class NetworkHandler {
         INSTANCE.registerMessage(id++, PlayMusicPacket.class, PlayMusicPacket::encode, PlayMusicPacket::decode, PlayMusicPacket::handle);
         INSTANCE.registerMessage(id++, StopMusicPacket.class,
                 StopMusicPacket::encode, StopMusicPacket::decode, StopMusicPacket::handle);
+        INSTANCE.registerMessage(id++, BackroomsSyncPacket.class,
+                BackroomsSyncPacket::encode, BackroomsSyncPacket::decode, BackroomsSyncPacket::handle);
+    }
+
+    public static void sendTo(ServerPlayerEntity player, Object msg) {
+        INSTANCE.sendTo(msg, player.connection.netManager, NetworkDirection.PLAY_TO_CLIENT);
     }
 }

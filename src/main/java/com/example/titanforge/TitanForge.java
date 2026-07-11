@@ -1,5 +1,8 @@
 package com.example.titanforge;
 
+import com.example.titanforge.backrooms.BackroomsDebugCommand;
+import com.example.titanforge.backrooms.BackroomsDimension;
+import com.example.titanforge.backrooms.BackroomsSessionManager;
 import com.example.titanforge.entities.PlayerCopyEntity;
 import com.example.titanforge.entities.ShadowEntity;
 import com.example.titanforge.entities.StunZombieEntity;
@@ -104,10 +107,12 @@ public class TitanForge {
     @SubscribeEvent
     public void onServerStart(FMLServerStartingEvent e) {
         LiminalDimension.syncSeedWithOverworld(e.getServer());
+        BackroomsDimension.get(e.getServer());
     }
 
     @SubscribeEvent
     public void onRegisterCommands(RegisterCommandsEvent e) {
+        BackroomsDebugCommand.register(e.getDispatcher());
         e.getDispatcher().register(Commands.literal("enchanter")
             .requires(s -> s.hasPermissionLevel(0))
             .executes(ctx -> {
@@ -147,16 +152,22 @@ public class TitanForge {
         if (sw.getDimensionKey() == LiminalDimension.LIMINAL_WORLD) {
             LiminalManager.tick(sw);
         }
+        if (sw.getDimensionKey() == BackroomsDimension.WORLD) {
+            BackroomsSessionManager.tick(sw);
+        }
     }
 
     @SubscribeEvent
     public void onPlayerDeath(net.minecraftforge.event.entity.living.LivingDeathEvent e) {
         if (e.getEntityLiving() instanceof ServerPlayerEntity) {
             ServerPlayerEntity p = (ServerPlayerEntity) e.getEntityLiving();
-            if (LiminalManager.isInside(p))
+            if (BackroomsSessionManager.isInBackrooms(p)) {
+                BackroomsSessionManager.onPlayerDeath(p);
+            } else if (LiminalManager.isInside(p)) {
                 LiminalManager.forceExit(p, true);
-            else
+            } else {
                 LiminalManager.onPlayerDeath(p.getUniqueID());
+            }
         }
     }
 
@@ -168,6 +179,7 @@ public class TitanForge {
 
     @SubscribeEvent
     public void onLogout(PlayerEvent.PlayerLoggedOutEvent e) {
+        BackroomsSessionManager.onLogout(e.getPlayer().getUniqueID());
         LiminalManager.onLogout(e.getPlayer().getUniqueID());
     }
 
