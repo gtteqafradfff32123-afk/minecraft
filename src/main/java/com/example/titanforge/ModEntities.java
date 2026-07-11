@@ -42,7 +42,7 @@ public class ModEntities {
                     .size(0.65F, 2.25F)
                     .trackingRange(8)
                     .updateInterval(3)
-                    .build("titanforge:plague_doctor"));
+                    .build("plague_doctor"));
 
     public static final RegistryObject<EntityType<PlayerCopyEntity>> PLAYER_COPY =
             ENTITIES.register("player_copy", () -> EntityType.Builder
