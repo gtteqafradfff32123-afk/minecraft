@@ -2,6 +2,7 @@ build/
 .gradle/
 out/
 *.jar
+!gradle/wrapper/gradle-wrapper.jar
 *.class
 *.log
 run/
