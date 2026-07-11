@@ -4,6 +4,7 @@ import com.example.titanforge.ModContainers;
 import com.example.titanforge.ModEntities;
 import com.example.titanforge.TitanForge;
 import com.example.titanforge.EnchanterScreen;
+import com.example.titanforge.client.renderer.PlagueDoctorRenderer;
 import net.minecraft.client.gui.ScreenManager;
 import net.minecraft.client.renderer.entity.SpriteRenderer;
 import net.minecraft.entity.EntityType;
@@ -22,6 +23,7 @@ public class ClientSetup {
             ScreenManager.registerFactory(ModContainers.ENCHANTER.get(), EnchanterScreen::new)
         );
         ModKeybinds.register();
+        RenderingRegistry.registerEntityRenderingHandler(ModEntities.PLAGUE_DOCTOR.get(), PlagueDoctorRenderer::new);
         RenderingRegistry.registerEntityRenderingHandler(ModEntities.SHADOW.get(), ShadowRenderer::new);
         RenderingRegistry.registerEntityRenderingHandler(ModEntities.PLAYER_COPY.get(), PlayerCopyRenderer::new);
         RenderingRegistry.registerEntityRenderingHandler(ModEntities.STUN_ZOMBIE.get(), StunZombieRenderer::new);

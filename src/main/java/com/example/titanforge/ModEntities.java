@@ -1,7 +1,7 @@
 package com.example.titanforge;
 
 import com.example.titanforge.entities.BlindGolemEntity;
-
+import com.example.titanforge.entities.PlagueDoctorEntity;
 import com.example.titanforge.entities.PlayerCopyEntity;
 import com.example.titanforge.entities.ShadowEntity;
 import com.example.titanforge.entities.StunZombieEntity;
@@ -36,6 +36,14 @@ public class ModEntities {
                     .size(0.6F, 1.95F)
                     .build("stun_zombie"));
 
+    public static final RegistryObject<EntityType<PlagueDoctorEntity>> PLAGUE_DOCTOR =
+            ENTITIES.register("plague_doctor", () -> EntityType.Builder
+                    .create(PlagueDoctorEntity::new, EntityClassification.MONSTER)
+                    .size(0.65F, 2.25F)
+                    .trackingRange(8)
+                    .updateInterval(3)
+                    .build("titanforge:plague_doctor"));
+
     public static final RegistryObject<EntityType<PlayerCopyEntity>> PLAYER_COPY =
             ENTITIES.register("player_copy", () -> EntityType.Builder
                     .<PlayerCopyEntity>create((type, world) -> new PlayerCopyEntity(type, world), EntityClassification.MISC)
@@ -43,6 +51,7 @@ public class ModEntities {
                     .build("player_copy"));
 
     public static void onEntityAttributeCreation(EntityAttributeCreationEvent event) {
+        event.put(PLAGUE_DOCTOR.get(), PlagueDoctorEntity.createAttributes().create());
         event.put(BLIND_GOLEM.get(), BlindGolemEntity.registerAttributes().create());
         event.put(SHADOW.get(), ShadowEntity.registerAttributes().create());
         event.put(STUN_ZOMBIE.get(), ZombieEntity.func_234342_eQ_()
