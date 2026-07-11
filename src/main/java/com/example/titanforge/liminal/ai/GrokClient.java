@@ -17,7 +17,7 @@ public class GrokClient {
     private static final String HARDCODED_API_KEY = "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";
     private static final String HARDCODED_ENDPOINT = "https://api.groq.com/openai/v1";
     private static final String HARDCODED_MODEL = "llama-3.3-70b-versatile";
-    private static final int HARDCODED_MAX_TOKENS = 100;
+    private static final int HARDCODED_MAX_TOKENS = 65;
     private static final double HARDCODED_TEMPERATURE = 0.5;
 
     static {

@@ -55,7 +55,7 @@ public class LiminalPrompt {
 
         String situation = "Текущая ситуация: рядом " + copiesAlive + " активных копий. Отвечай соответственно.\n\n";
 
-        String reminder = "НАПОМИНАНИЕ: Отвечай только на русском языке. Ни слова на английском.";
+        String reminder = "НАПОМИНАНИЕ: Отвечай только на русском языке. Ни слова на английском. Пиши 2-3 предложения, не больше.";
 
         return header + intro + "\n" + rules + speech + situation + reminder;
     }
