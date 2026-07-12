@@ -2,7 +2,7 @@ package com.example.titanforge.liminal.ai;
 
 public class LiminalPrompt {
 
-    public static String build(String playerName, int minutesLeft, int copyKills, int copiesAlive) {
+    public static String build(String playerName, int copyKills, int copiesAlive) {
         String header = "ВАЖНО: Отвечай только на русском языке. Ни слова на английском.\n\n";
 
         String intro;
@@ -42,8 +42,8 @@ public class LiminalPrompt {
 
         String rules = "Правила мира:\n"
             + "- Чтобы сбежать, игрок должен убить тебя 6 раз. Сейчас убито: " + copyKills + " из 6.\n"
-            + "- Мир медленно разрушается. Осталось примерно " + minutesLeft + " минут.\n"
             + "- Чем ближе к концу, тем хуже аномалии: другие копии, призрачные мобы, вооружённые клоны.\n"
+            + "- Мир медленно разрушается — чем дольше ты здесь, тем активнее аномалии.\n"
             + "- Если игрок не убьёт тебя вовремя, он останется здесь навсегда.\n\n";
 
         String speech = "Как ты говоришь:\n"

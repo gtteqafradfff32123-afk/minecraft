@@ -39,10 +39,9 @@ public class LiminalChatAI {
         LiminalManager.State st = LiminalManager.getState(pid);
         if (st == null) return;
 
-        int minutesLeft = Math.max(0, (st.durationTicks - st.ticks) / (60 * 20));
         String playerName = player.getGameProfile().getName();
         String sysPrompt = LiminalPrompt.build(
-            playerName, minutesLeft, st.copiesKilled, st.activeCopies);
+            playerName, st.copiesKilled, st.activeCopies);
         String intentHint = LiminalManager.applyChatIntent(player, rawMsg);
         String aiInput = intentHint == null ? rawMsg : rawMsg + "\n[\u0421\u0418\u0421\u0422\u0415\u041C\u0410: " + intentHint + ". \u041E\u0442\u0432\u0435\u0442\u044C \u0438\u0433\u0440\u043E\u043A\u0443 \u0432 \u0440\u043E\u043B\u0438 \u0442\u0435\u043D\u0438 \u0438 \u043F\u0440\u0438\u0437\u043D\u0430\u0442\u044C \u043D\u043E\u0432\u043E\u0435 \u043F\u043E\u0432\u0435\u0434\u0435\u043D\u0438\u0435.]";
 
@@ -69,10 +68,9 @@ public class LiminalChatAI {
         LiminalManager.State st = LiminalManager.getState(pid);
         if (st == null) return;
 
-        int minutesLeft = Math.max(0, (st.durationTicks - st.ticks) / (60 * 20));
         String playerName = player.getGameProfile().getName();
         String sysPrompt = LiminalPrompt.build(
-            playerName, minutesLeft, st.copiesKilled, st.activeCopies);
+            playerName, st.copiesKilled, st.activeCopies);
 
         GrokClient.ask(sysPrompt, LiminalDialogue.get(pid), "[\u0421\u0418\u0422\u0423\u0410\u0426\u0418\u042F: " + situation + "]")
             .thenAccept(reply -> {

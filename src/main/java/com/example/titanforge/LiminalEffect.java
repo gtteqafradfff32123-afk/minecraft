@@ -32,6 +32,6 @@ public class LiminalEffect extends Effect {
         world.spawnParticle(ParticleTypes.PORTAL,
             entity.getPosX(), entity.getPosY() + entity.getHeight() / 2, entity.getPosZ(),
             60, 0.4, 0.8, 0.4, 0.3);
-        com.example.titanforge.liminal.LiminalManager.enter(entity, null, 120 + world.rand.nextInt(120));
+        com.example.titanforge.liminal.LiminalManager.enter(entity, null);
     }
 }

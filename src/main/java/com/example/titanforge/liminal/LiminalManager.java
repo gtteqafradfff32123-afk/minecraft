@@ -42,7 +42,6 @@ import java.util.*;
 
 public class LiminalManager {
     private static final int RADIUS = 100;
-    private static final int DURATION_TICKS = 7200;
     private static final int KILLS_TO_ESCAPE = 6;
     private static final int UNFREEZE_TICKS = 60;
     public static final int SHADOW_BEHAVIOR_STALK = 0;
@@ -59,7 +58,6 @@ public class LiminalManager {
         public UUID victim;
         public BlockPos center;
         public int ticks = 0;
-        public int durationTicks;
         public int copiesKilled = 0;
         public int activeCopies = 0;
         public boolean cloneReady = false;
@@ -109,7 +107,7 @@ public class LiminalManager {
         target.addPotionEffect(new EffectInstance(Effects.JUMP_BOOST, Integer.MAX_VALUE, 128, false, false));
     }
 
-    public static void enter(LivingEntity victim, ServerPlayerEntity owner, int durationSec) {
+    public static void enter(LivingEntity victim, ServerPlayerEntity owner) {
         if (!(victim instanceof ServerPlayerEntity)) {
             enterMob(victim, (ServerWorld) victim.world);
             return;
@@ -142,7 +140,6 @@ public class LiminalManager {
         state.sourceCenter = player.getPosition().toImmutable();
         state.center = LiminalArenaSlots.center(playerId);
         state.realReturnPos = player.getPosition().toImmutable();
-        state.durationTicks = DURATION_TICKS;
         state.frozen = true;
         STATES.put(playerId, state);
 
@@ -459,12 +456,6 @@ public class LiminalManager {
             // World destruction — every 3 seconds after first 10 seconds
             if (st.ticks >= 10 * 20 && st.ticks % (3 * 20) == 0) {
                 worldCollapseTick(clone, st);
-            }
-
-            // Atmosphere: heartbeat when time is low
-            int minutesLeft = Math.max(0, (st.durationTicks - st.ticks) / (60 * 20));
-            if (minutesLeft <= 1 && st.ticks % 40 == 0) {
-                player.playSound(SoundEvents.ENTITY_WITHER_AMBIENT, 1.0F, 0.5F);
             }
 
             // Trigger rage music when shadow becomes aggressive

@@ -86,7 +86,7 @@ public class NecroEventHandler {
         ServerPlayerEntity owner = (ServerPlayerEntity) event.getPlayer();
         if (owner.getCooldownTracker().hasCooldown(sword.getItem())) return;
 
-        if (!LiminalGateway.enter(victim, owner, 360)) return;
+        if (!LiminalGateway.enter(victim, owner)) return;
         owner.getCooldownTracker().setCooldown(sword.getItem(), 180 * 20);
         owner.setHealth(Math.max(1.0F, owner.getHealth() - 6.0F));
         sword.damageItem(30, owner, p -> {});

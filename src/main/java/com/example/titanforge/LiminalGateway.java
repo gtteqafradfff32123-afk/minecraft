@@ -13,12 +13,12 @@ import net.minecraft.world.server.ServerWorld;
 public final class LiminalGateway {
     private LiminalGateway() {}
 
-    public static boolean enter(LivingEntity victim, PlayerEntity owner, int ignoredDurationSec) {
+    public static boolean enter(LivingEntity victim, PlayerEntity owner) {
         if (victim == null || victim.world.isRemote) return false;
         if (!(victim.world instanceof ServerWorld)) return false;
         if (owner != null && !(owner instanceof ServerPlayerEntity)) return false;
         com.example.titanforge.liminal.LiminalManager.enter(
-                victim, owner == null ? null : (ServerPlayerEntity) owner, 360);
+                victim, owner == null ? null : (ServerPlayerEntity) owner);
         return true;
     }
 
