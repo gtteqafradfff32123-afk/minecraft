@@ -1,39 +1,52 @@
 package com.example.titanforge.client;
 
 import com.example.titanforge.entities.PlayerCopyEntity;
-import com.mojang.authlib.GameProfile;
-import com.mojang.authlib.minecraft.MinecraftProfileTexture;
-import net.minecraft.client.Minecraft;
+import com.mojang.blaze3d.matrix.MatrixStack;
+import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.client.renderer.entity.EntityRendererManager;
 import net.minecraft.client.renderer.entity.MobRenderer;
 import net.minecraft.client.renderer.entity.model.PlayerModel;
-import net.minecraft.client.resources.DefaultPlayerSkin;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
-import java.util.Map;
 import java.util.UUID;
 
 @OnlyIn(Dist.CLIENT)
-public class PlayerCopyRenderer extends MobRenderer<PlayerCopyEntity, PlayerModel<PlayerCopyEntity>> {
+public final class PlayerCopyRenderer
+    extends MobRenderer<PlayerCopyEntity, PlayerModel<PlayerCopyEntity>> {
+
+    private final PlayerModel<PlayerCopyEntity> wideModel =
+        new PlayerModel<>(0.0F, false);
+    private final PlayerModel<PlayerCopyEntity> slimModel =
+        new PlayerModel<>(0.0F, true);
 
     public PlayerCopyRenderer(EntityRendererManager manager) {
         super(manager, new PlayerModel<>(0.0F, false), 0.5F);
     }
 
+    private OwnerSkinResolver.SkinData skin(PlayerCopyEntity entity) {
+        UUID owner = entity.getOwnerId()
+            .orElse(entity.getUniqueID());
+        return OwnerSkinResolver.resolve(
+            owner, entity.getOwnerProfile());
+    }
+
     @Override
     public ResourceLocation getEntityTexture(PlayerCopyEntity entity) {
-        GameProfile gp = entity.getOwnerProfile();
-        Minecraft mc = Minecraft.getInstance();
-        UUID fallbackId = entity.getOwnerId().orElse(entity.getUniqueID());
-        if (gp != null) {
-            Map<MinecraftProfileTexture.Type, MinecraftProfileTexture> tex =
-                    mc.getSkinManager().loadSkinFromCache(gp);
-            if (tex.containsKey(MinecraftProfileTexture.Type.SKIN))
-                return mc.getSkinManager().loadSkin(tex.get(MinecraftProfileTexture.Type.SKIN), MinecraftProfileTexture.Type.SKIN);
-            mc.getSkinManager().loadProfileTextures(gp, (type, location, profileTexture) -> {}, true);
-        }
-        return DefaultPlayerSkin.getDefaultSkin(fallbackId);
+        return skin(entity).texture;
+    }
+
+    @Override
+    public void render(PlayerCopyEntity entity,
+                       float entityYaw,
+                       float partialTicks,
+                       MatrixStack matrix,
+                       IRenderTypeBuffer buffers,
+                       int packedLight) {
+        OwnerSkinResolver.SkinData data = skin(entity);
+        this.entityModel = data.slim ? slimModel : wideModel;
+        super.render(entity, entityYaw, partialTicks,
+            matrix, buffers, packedLight);
     }
 }

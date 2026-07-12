@@ -12,6 +12,7 @@ public final class ModSounds {
 
     public static final RegistryObject<SoundEvent> BLOOD_FRENZY_BREATH = register("blood_frenzy_breath");
     public static final RegistryObject<SoundEvent> LIMINAL_RAGE = register("danger_around_the_corner");
+    public static final RegistryObject<SoundEvent> LIMINAL_CALM = register("liminal_calm");
 
     private static RegistryObject<SoundEvent> register(String name) {
         ResourceLocation id = new ResourceLocation(TitanForge.MOD_ID, name);

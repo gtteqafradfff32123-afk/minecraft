@@ -15,11 +15,16 @@ public final class LiminalMusicController {
     public static void play(String soundName) {
         stop();
         ResourceLocation id = new ResourceLocation("titanforge", soundName);
+        float volume = soundName.equals("liminal_calm") ? 0.4F : 1.0F;
         active = new SimpleSound(id, SoundCategory.AMBIENT,
-                1.0F, 1.0F, true, 0,
+                volume, 1.0F, true, 0,
                 ISound.AttenuationType.NONE,
                 0.0D, 0.0D, 0.0D, true);
         Minecraft.getInstance().getSoundHandler().play(active);
+    }
+
+    public static boolean isPlaying() {
+        return active != null;
     }
 
     public static void stop() {

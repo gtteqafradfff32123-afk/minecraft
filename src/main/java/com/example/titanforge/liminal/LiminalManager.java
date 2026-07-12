@@ -1,6 +1,9 @@
 package com.example.titanforge.liminal;
 
 import com.google.common.collect.ImmutableMap;
+import com.example.titanforge.NetworkHandler;
+import com.example.titanforge.PlayMusicPacket;
+import com.example.titanforge.StopMusicPacket;
 import com.example.titanforge.TitanForge;
 import com.example.titanforge.entities.PlayerCopyEntity;
 import com.example.titanforge.entities.ShadowEntity;
@@ -99,6 +102,7 @@ public class LiminalManager {
         public int shieldBlocks;
         public int sprintTicks;
         public int timeLookingAtShadow;
+        public int collapseCooldown;
     }
 
     private static final Map<UUID, State> STATES = new HashMap<>();
@@ -209,6 +213,7 @@ public class LiminalManager {
         player.removePotionEffect(Effects.SLOWNESS);
 
         st.shadowSpawned = spawnShadow(job.target, st, player);
+        startCalmMusic(player, st);
     }
 
     public static void buildVoidWall(ServerWorld world, BlockPos center, int radius) {
@@ -467,15 +472,12 @@ public class LiminalManager {
                 sendCopyMessage(player, "\u041C\u0438\u0440 \u0440\u0443\u0448\u0438\u0442\u0441\u044F...");
             }
 
-            // World destruction — every 3 seconds after first 10 seconds
-            if (st.ticks >= 10 * 20 && st.ticks % (3 * 20) == 0) {
-                worldCollapseTick(clone, st);
-            }
+            // World destruction — based on phase, not time
+            tickPhaseCollapse(clone, player, st);
 
             // Trigger rage music when shadow becomes aggressive
             if (st.shadowAggressive && !st.musicStarted) {
-                st.musicStarted = true;
-                sendRageMusicPacket(player);
+                switchToRageMusic(player, st);
             }
 
             // Prologue complete: start boss fight
@@ -534,71 +536,234 @@ public class LiminalManager {
         TitanForge.LOGGER.info("[liminal] dimension empty");
     }
 
-    private static void worldCollapseTick(ServerWorld clone, State st) {
-        Random r = clone.rand;
-        int progress = st.ticks / 600;
-        int scale = Math.min(progress, 15);
+    private static void tickPhaseCollapse(ServerWorld world,
+                                          ServerPlayerEntity player,
+                                          State state) {
+        if (!state.firstHit) return;
 
-        int range = 60 + scale * 20;
-        int count = 4 + scale * 3;
-        for (int i = 0; i < count; i++) {
-            int bx = st.center.getX() + r.nextInt(range * 2) - range;
-            int bz = st.center.getZ() + r.nextInt(range * 2) - range;
-            int by = 0 + r.nextInt(100);
-            BlockPos p = new BlockPos(bx, by, bz);
+        int interval;
+        int foci;
+        int radius;
 
-            if (!clone.isBlockPresent(p)) continue;
-
-            Block block = clone.getBlockState(p).getBlock();
-            if (block == Blocks.BLACK_CONCRETE || block == Blocks.BARRIER) continue;
-
-            double type = r.nextDouble();
-
-            if (type < 0.20) {
-                for (int y = by; y > by - 10 && y >= 0; y--) {
-                    BlockPos cp = new BlockPos(bx, y, bz);
-                    clone.setBlockState(cp, Blocks.AIR.getDefaultState(), 2);
-                }
-                clone.spawnParticle(net.minecraft.particles.ParticleTypes.SMOKE,
-                    bx, by, bz, 10, 0.5, 1.0, 0.5, 0.02);
-            } else if (type < 0.35) {
-                for (int dx = -1; dx <= 1; dx++) {
-                    for (int dz = -1; dz <= 1; dz++) {
-                        for (int y = by; y >= 0; y--) {
-                            BlockPos cp = new BlockPos(bx + dx, y, bz + dz);
-                            clone.setBlockState(cp, Blocks.AIR.getDefaultState(), 2);
-                        }
-                    }
-                }
-                clone.spawnParticle(net.minecraft.particles.ParticleTypes.LARGE_SMOKE,
-                    bx, by, bz, 20, 1.0, 2.0, 1.0, 0.03);
-            } else if (type < 0.50) {
-                for (int dy = 0; dy < 6; dy++) {
-                    BlockPos cp = new BlockPos(bx, by - dy, bz);
-                    clone.setBlockState(cp, Blocks.AIR.getDefaultState(), 2);
-                }
-                clone.spawnParticle(net.minecraft.particles.ParticleTypes.SMOKE,
-                    bx, by, bz, 15, 1.0, 0.5, 1.0, 0.01);
-            } else if (type < 0.75) {
-                clone.createExplosion(null, bx, by, bz, 2.5F + r.nextFloat() * 2.0F, false, net.minecraft.world.Explosion.Mode.NONE);
+        if (!state.finalRitualStarted) {
+            if (state.copiesKilled <= 1) {
+                interval = 80;
+                foci = 1;
+                radius = 2;
+            } else if (state.copiesKilled <= 3) {
+                interval = 60;
+                foci = 2;
+                radius = 2;
+            } else if (state.copiesKilled <= 5) {
+                interval = 45;
+                foci = 3;
+                radius = 3;
             } else {
-                for (int dx = -3; dx <= 3; dx++) {
-                    for (int dz = -3; dz <= 3; dz++) {
-                        for (int dy = -2; dy <= 2; dy++) {
-                            BlockPos rp = new BlockPos(bx + dx, by + dy, bz + dz);
-                            BlockState bs = clone.getBlockState(rp);
-                            if (bs.isAir()) continue;
-                            Block next = ROT_CHAIN.get(bs.getBlock());
-                            if (next != null && r.nextFloat() < 0.5f) {
-                                clone.setBlockState(rp, next.getDefaultState(), 2);
-                            } else if (r.nextFloat() < 0.3f) {
-                                clone.setBlockState(rp, Blocks.AIR.getDefaultState(), 2);
-                            }
-                        }
-                    }
-                }
+                interval = 35;
+                foci = 4;
+                radius = 3;
+            }
+        } else {
+            switch (state.shadowPhase) {
+                case AWAKENED:
+                    interval = 60;
+                    foci = 2;
+                    radius = 2;
+                    break;
+                case HUNTER:
+                    interval = 45;
+                    foci = 3;
+                    radius = 3;
+                    break;
+                case FRACTURED:
+                    interval = 30;
+                    foci = 4;
+                    radius = 3;
+                    break;
+                case FINAL:
+                    interval = 20;
+                    foci = 6;
+                    radius = 4;
+                    break;
+                default:
+                    interval = 80;
+                    foci = 1;
+                    radius = 2;
+                    break;
             }
         }
+
+        if (state.collapseCooldown > 0) {
+            state.collapseCooldown--;
+            return;
+        }
+
+        state.collapseCooldown = interval;
+        collapseSurface(world, player, state, foci, radius);
+    }
+
+    private static void collapseSurface(ServerWorld world,
+                                        ServerPlayerEntity player,
+                                        State state,
+                                        int foci,
+                                        int radius) {
+        for (int i = 0; i < foci; i++) {
+            BlockPos center = findCollapseSurface(world, player, state);
+            if (center == null) continue;
+
+            if (world.rand.nextFloat() < 0.22F) {
+                world.createExplosion(
+                    null,
+                    center.getX() + 0.5D,
+                    center.getY() + 0.5D,
+                    center.getZ() + 0.5D,
+                    1.8F + radius * 0.35F,
+                    false,
+                    net.minecraft.world.Explosion.Mode.DESTROY);
+            }
+
+            for (BlockPos pos : BlockPos.getAllInBoxMutable(
+                    center.add(-radius, -radius, -radius),
+                    center.add(radius, radius, radius))) {
+
+                if (!insideArena(state, pos, 5.0D)) continue;
+                if (isProtectedWall(world, pos)) continue;
+                if (world.getTileEntity(pos) != null) continue;
+                if (pos.distanceSq(player.getPosition()) < 25.0D) continue;
+
+                double distance = Math.sqrt(pos.distanceSq(center));
+                if (distance > radius + 0.35D) continue;
+
+                BlockState current = world.getBlockState(pos);
+                if (current.isAir()) continue;
+                if (current.getBlock() == Blocks.BEDROCK
+                    || current.getBlock() == Blocks.BARRIER
+                    || current.getBlock() == Blocks.BLACK_CONCRETE) continue;
+
+                float chance = 0.26F + (float) ((radius - distance) * 0.11D);
+                if (world.rand.nextFloat() > chance) continue;
+
+                BlockState rotten = nextRotState(current);
+                world.setBlockState(pos, rotten, 18);
+
+                world.spawnParticle(
+                    rotten.isAir() ? ParticleTypes.LARGE_SMOKE : ParticleTypes.ASH,
+                    pos.getX() + 0.5D,
+                    pos.getY() + 0.6D,
+                    pos.getZ() + 0.5D,
+                    3,
+                    0.25D, 0.3D, 0.25D,
+                    0.02D);
+            }
+        }
+    }
+
+    private static BlockState nextRotState(BlockState state) {
+        Block block = state.getBlock();
+
+        if (block == Blocks.GRASS_BLOCK) {
+            return Blocks.DIRT.getDefaultState();
+        }
+        if (block == Blocks.DIRT) {
+            return Blocks.COARSE_DIRT.getDefaultState();
+        }
+        if (block == Blocks.COARSE_DIRT) {
+            return Blocks.SOUL_SAND.getDefaultState();
+        }
+
+        if (block == Blocks.GLASS
+            || block == Blocks.GLASS_PANE
+            || block == Blocks.OAK_LEAVES
+            || block == Blocks.BIRCH_LEAVES
+            || block == Blocks.SPRUCE_LEAVES
+            || block == Blocks.JUNGLE_LEAVES
+            || block == Blocks.ACACIA_LEAVES
+            || block == Blocks.DARK_OAK_LEAVES) {
+            return Blocks.AIR.getDefaultState();
+        }
+
+        if (block == Blocks.OAK_PLANKS
+            || block == Blocks.BIRCH_PLANKS
+            || block == Blocks.SPRUCE_PLANKS
+            || block == Blocks.JUNGLE_PLANKS
+            || block == Blocks.ACACIA_PLANKS
+            || block == Blocks.DARK_OAK_PLANKS
+            || block == Blocks.OAK_LOG
+            || block == Blocks.BIRCH_LOG
+            || block == Blocks.SPRUCE_LOG
+            || block == Blocks.JUNGLE_LOG
+            || block == Blocks.ACACIA_LOG
+            || block == Blocks.DARK_OAK_LOG) {
+            return Blocks.COAL_BLOCK.getDefaultState();
+        }
+
+        if (block == Blocks.COAL_BLOCK) {
+            return Blocks.AIR.getDefaultState();
+        }
+
+        if (block == Blocks.STONE
+            || block == Blocks.STONE_BRICKS
+            || block == Blocks.COBBLESTONE) {
+            return Blocks.MOSSY_COBBLESTONE.getDefaultState();
+        }
+
+        if (block == Blocks.MOSSY_COBBLESTONE) {
+            return Blocks.AIR.getDefaultState();
+        }
+
+        return Blocks.AIR.getDefaultState();
+    }
+
+    private static BlockPos findCollapseSurface(ServerWorld world,
+                                                ServerPlayerEntity player,
+                                                State state) {
+        for (int attempt = 0; attempt < 24; attempt++) {
+            double angle = world.rand.nextDouble() * Math.PI * 2.0D;
+            double distance = 10.0D + world.rand.nextDouble() * 82.0D;
+
+            int x = state.center.getX()
+                + (int) Math.round(Math.cos(angle) * distance);
+            int z = state.center.getZ()
+                + (int) Math.round(Math.sin(angle) * distance);
+
+            BlockPos.Mutable cursor = new BlockPos.Mutable(
+                x,
+                Math.min(255, player.getPosition().getY() + 40),
+                z);
+
+            while (cursor.getY() > 1 && world.isAirBlock(cursor)) {
+                cursor.move(0, -1, 0);
+            }
+
+            BlockPos found = cursor.toImmutable();
+            if (world.isAirBlock(found)) continue;
+            if (isProtectedWall(world, found)) continue;
+            if (found.distanceSq(player.getPosition()) < 25.0D) continue;
+            return found;
+        }
+        return null;
+    }
+
+    private static boolean insideArena(State state, BlockPos pos, double margin) {
+        double dx = pos.getX() - state.center.getX();
+        double dz = pos.getZ() - state.center.getZ();
+        double allowed = RADIUS - margin;
+        return dx * dx + dz * dz < allowed * allowed;
+    }
+
+    private static void startCalmMusic(ServerPlayerEntity player, State state) {
+        if (state.shadowAggressive || state.firstHit) return;
+        NetworkHandler.sendTo(player, new PlayMusicPacket("liminal_calm"));
+    }
+
+    private static void switchToRageMusic(ServerPlayerEntity player,
+                                          State state) {
+        if (state.musicStarted) return;
+        state.musicStarted = true;
+
+        NetworkHandler.sendTo(
+            player,
+            new PlayMusicPacket("danger_around_the_corner"));
     }
 
     private static boolean spawnShadow(ServerWorld w, State st, ServerPlayerEntity owner) {
@@ -812,6 +977,7 @@ public class LiminalManager {
         State st = STATES.get(vp.getUniqueID());
         if (st == null || st.firstHit) return;
         makeShadowAggressive(vp, st);
+        switchToRageMusic(vp, st);
         sendCopyMessage(vp, "\u0422\u044B \u0440\u0430\u0437\u0431\u0443\u0434\u0438\u043B \u043C\u0435\u043D\u044F... \u0422\u0435\u043F\u0435\u0440\u044C \u043C\u044B \u0431\u0443\u0434\u0435\u043C \u0438\u0433\u0440\u0430\u0442\u044C \u043F\u043E-\u043D\u0430\u0441\u0442\u043E\u044F\u0449\u0435\u043C\u0443.");
     }
 
