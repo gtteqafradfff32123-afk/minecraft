@@ -1,6 +1,7 @@
 package com.example.titanforge.liminal;
 
 import com.google.common.collect.ImmutableMap;
+import com.example.titanforge.ModBlocks;
 import com.example.titanforge.NetworkHandler;
 import com.example.titanforge.PlayMusicPacket;
 import com.example.titanforge.StopMusicPacket;
@@ -643,11 +644,19 @@ public class LiminalManager {
                 float chance = 0.26F + (float) ((radius - distance) * 0.11D);
                 if (world.rand.nextFloat() > chance) continue;
 
-                BlockState rotten = nextRotState(current);
-                world.setBlockState(pos, rotten, 18);
+                if (!canDecay(pos, current)) continue;
+
+                if (world.getTileEntity(pos) != null) {
+                    world.removeTileEntity(pos);
+                }
+
+                world.setBlockState(
+                    pos,
+                    ModBlocks.YELLOW_DECAY_BLOCK.get().getDefaultState(),
+                    18);
 
                 world.spawnParticle(
-                    rotten.isAir() ? ParticleTypes.LARGE_SMOKE : ParticleTypes.ASH,
+                    ParticleTypes.ASH,
                     pos.getX() + 0.5D,
                     pos.getY() + 0.6D,
                     pos.getZ() + 0.5D,
@@ -658,60 +667,22 @@ public class LiminalManager {
         }
     }
 
-    private static BlockState nextRotState(BlockState state) {
+    private static boolean canDecay(BlockPos pos,
+                                    BlockState state) {
         Block block = state.getBlock();
 
-        if (block == Blocks.GRASS_BLOCK) {
-            return Blocks.DIRT.getDefaultState();
-        }
-        if (block == Blocks.DIRT) {
-            return Blocks.COARSE_DIRT.getDefaultState();
-        }
-        if (block == Blocks.COARSE_DIRT) {
-            return Blocks.SOUL_SAND.getDefaultState();
-        }
-
-        if (block == Blocks.GLASS
-            || block == Blocks.GLASS_PANE
-            || block == Blocks.OAK_LEAVES
-            || block == Blocks.BIRCH_LEAVES
-            || block == Blocks.SPRUCE_LEAVES
-            || block == Blocks.JUNGLE_LEAVES
-            || block == Blocks.ACACIA_LEAVES
-            || block == Blocks.DARK_OAK_LEAVES) {
-            return Blocks.AIR.getDefaultState();
+        if (state.isAir()) return false;
+        if (block == Blocks.OBSIDIAN
+            || block == Blocks.CRYING_OBSIDIAN
+            || block == Blocks.BEDROCK
+            || block == Blocks.BARRIER
+            || block == Blocks.BLACK_CONCRETE
+            || block == ModBlocks.YELLOW_DECAY_BLOCK.get()
+            || block == ModBlocks.RED_DECAY_BLOCK.get()) {
+            return false;
         }
 
-        if (block == Blocks.OAK_PLANKS
-            || block == Blocks.BIRCH_PLANKS
-            || block == Blocks.SPRUCE_PLANKS
-            || block == Blocks.JUNGLE_PLANKS
-            || block == Blocks.ACACIA_PLANKS
-            || block == Blocks.DARK_OAK_PLANKS
-            || block == Blocks.OAK_LOG
-            || block == Blocks.BIRCH_LOG
-            || block == Blocks.SPRUCE_LOG
-            || block == Blocks.JUNGLE_LOG
-            || block == Blocks.ACACIA_LOG
-            || block == Blocks.DARK_OAK_LOG) {
-            return Blocks.COAL_BLOCK.getDefaultState();
-        }
-
-        if (block == Blocks.COAL_BLOCK) {
-            return Blocks.AIR.getDefaultState();
-        }
-
-        if (block == Blocks.STONE
-            || block == Blocks.STONE_BRICKS
-            || block == Blocks.COBBLESTONE) {
-            return Blocks.MOSSY_COBBLESTONE.getDefaultState();
-        }
-
-        if (block == Blocks.MOSSY_COBBLESTONE) {
-            return Blocks.AIR.getDefaultState();
-        }
-
-        return Blocks.AIR.getDefaultState();
+        return true;
     }
 
     private static BlockPos findCollapseSurface(ServerWorld world,

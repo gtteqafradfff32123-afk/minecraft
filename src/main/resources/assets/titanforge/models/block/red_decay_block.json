@@ -1,0 +1,6 @@
+{
+  "parent": "block/cube_all",
+  "textures": {
+    "all": "titanforge:blocks/red_decay_block"
+  }
+}

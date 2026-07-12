@@ -45,6 +45,7 @@ public class TitanForge {
         ModEnchantments.ENCHANTMENTS.register(modBus);
         ModEffects.EFFECTS.register(modBus);
         ModPotions.POTIONS.register(modBus);
+        ModBlocks.BLOCKS.register(modBus);
         ModItems.ITEMS.register(modBus);
         ModContainers.CONTAINERS.register(modBus);
         ModSounds.SOUNDS.register(modBus);
