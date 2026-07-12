@@ -19,6 +19,7 @@ import com.example.titanforge.liminal.screen.LiminalWallParticles;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.block.material.Material;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
@@ -198,12 +199,21 @@ public class LiminalManager {
         buildVoidWall(job.target, center, RADIUS);
         removeBedrock(job.target, center, RADIUS);
 
+        BlockPos safeSpawn = findSafeSpawn(
+                job.target,
+                center,
+                job.sourceCenter.getY());
+
         player.teleport(job.target,
-                center.getX() + 0.5D,
-                center.getY(),
-                center.getZ() + 0.5D,
+                safeSpawn.getX() + 0.5D,
+                safeSpawn.getY(),
+                safeSpawn.getZ() + 0.5D,
                 player.rotationYaw,
                 player.rotationPitch);
+
+        player.setMotion(0.0D, 0.0D, 0.0D);
+        player.fallDistance = 0.0F;
+        player.velocityChanged = true;
 
         LimboHandler.exitLimbo(player);
         st.cloneReady = true;
@@ -215,6 +225,75 @@ public class LiminalManager {
 
         st.shadowSpawned = spawnShadow(job.target, st, player);
         startCalmMusic(player, st);
+    }
+
+    private static BlockPos findSafeSpawn(ServerWorld world,
+                                           BlockPos center,
+                                           int preferredY) {
+        for (int radius = 0; radius <= 10; radius++) {
+            for (int dx = -radius; dx <= radius; dx++) {
+                for (int dz = -radius; dz <= radius; dz++) {
+                    if (radius > 0
+                        && Math.abs(dx) != radius
+                        && Math.abs(dz) != radius) continue;
+
+                    for (int offset = 0; offset <= 48; offset++) {
+                        int[] ys = offset == 0
+                            ? new int[]{preferredY}
+                            : new int[]{preferredY + offset, preferredY - offset};
+
+                        for (int y : ys) {
+                            if (y < 2 || y > 253) continue;
+
+                            BlockPos feet = new BlockPos(
+                                center.getX() + dx, y, center.getZ() + dz);
+                            BlockPos head = feet.up();
+                            BlockPos floor = feet.down();
+
+                            BlockState floorState = world.getBlockState(floor);
+                            Block floorBlock = floorState.getBlock();
+
+                            boolean dangerous =
+                                floorBlock == Blocks.LAVA
+                                || floorBlock == Blocks.FIRE
+                                || floorBlock == Blocks.SOUL_FIRE
+                                || floorBlock == Blocks.CACTUS
+                                || floorBlock == Blocks.MAGMA_BLOCK
+                                || floorBlock == Blocks.CAMPFIRE
+                                || floorBlock == ModBlocks.YELLOW_DECAY_BLOCK.get()
+                                || floorBlock == ModBlocks.RED_DECAY_BLOCK.get();
+
+                            boolean free =
+                                world.isAirBlock(feet)
+                                && world.isAirBlock(head)
+                                && world.getFluidState(feet).isEmpty()
+                                && world.getFluidState(head).isEmpty();
+
+                            boolean solidFloor =
+                                !floorState.isAir()
+                                && floorState.getMaterial().isSolid();
+
+                            if (free && solidFloor && !dangerous) {
+                                return feet;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        BlockPos fallback = new BlockPos(
+            center.getX(), Math.max(3, Math.min(252, preferredY)),
+            center.getZ());
+
+        world.setBlockState(fallback.down(),
+            Blocks.OBSIDIAN.getDefaultState(), 18);
+        world.setBlockState(fallback,
+            Blocks.AIR.getDefaultState(), 18);
+        world.setBlockState(fallback.up(),
+            Blocks.AIR.getDefaultState(), 18);
+
+        return fallback;
     }
 
     public static void buildVoidWall(ServerWorld world, BlockPos center, int radius) {
