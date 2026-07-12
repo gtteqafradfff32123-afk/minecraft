@@ -1,6 +1,7 @@
 package com.example.titanforge.entities;
 
 import com.example.titanforge.entities.ai.PlayerCopyStalkGoal;
+import com.example.titanforge.liminal.LiminalManager;
 import net.minecraft.entity.CreatureEntity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.MobEntity;
@@ -168,13 +169,19 @@ public class PlayerCopyEntity extends CreatureEntity {
     @Override
     public boolean attackEntityFrom(DamageSource source, float amount) {
         if (source == DamageSource.OUT_OF_WORLD) return super.attackEntityFrom(source, amount);
-        if (!isHostileCopy()) return false;
+        return false;
+    }
 
-        if (source.getTrueSource() instanceof PlayerEntity) {
-            PlayerEntity attacker = (PlayerEntity) source.getTrueSource();
-            boolean owner = getOwnerId().map(id -> id.equals(attacker.getUniqueID())).orElse(false);
-            if (!owner) return false;
+    @Override
+    public void onDeath(DamageSource cause) {
+        if (!world.isRemote) {
+            getOwnerId().ifPresent(id -> {
+                LiminalManager.State st = LiminalManager.getState(id);
+                if (st != null) {
+                    st.copiesKilled++;
+                }
+            });
         }
-        return super.attackEntityFrom(source, amount);
+        super.onDeath(cause);
     }
 }

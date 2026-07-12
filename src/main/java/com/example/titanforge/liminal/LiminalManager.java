@@ -9,7 +9,9 @@ import com.example.titanforge.liminal.chat.LiminalChatAI;
 import com.example.titanforge.liminal.copy.ChunkCopyManager;
 import com.example.titanforge.liminal.copy.CopyJob;
 import com.example.titanforge.liminal.copy.DeltaCopier;
+import com.example.titanforge.liminal.reward.RewardShadowManager;
 import com.example.titanforge.liminal.screen.LimboHandler;
+import com.example.titanforge.liminal.screen.LiminalWallParticles;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -303,6 +305,16 @@ public class LiminalManager {
     private static final int MAX_ACTIVE_COPIES = 6;
 
     public static void tick(ServerWorld clone) {
+        // Loading progress for non-ready states
+        for (State st : STATES.values()) {
+            if (!st.cloneReady && st.ambientTimer % 20 == 0) {
+                ServerPlayerEntity p = clone.getServer().getPlayerList().getPlayerByUUID(st.victim);
+                if (p != null && p.world == clone) {
+                    LimboHandler.tickProgress(p);
+                }
+            }
+        }
+
         Iterator<Map.Entry<UUID, State>> it = STATES.entrySet().iterator();
         while (it.hasNext()) {
             State st = it.next().getValue();
@@ -374,6 +386,7 @@ public class LiminalManager {
 
             // Wall ambient effects — dark particles around the wall ring
             spawnWallAmbient(clone, st);
+            LiminalWallParticles.tick(clone, player, st);
 
             // Everything below this point requires first hit
             if (!st.firstHit) continue;
@@ -464,12 +477,13 @@ public class LiminalManager {
                 sendRageMusicPacket(player);
             }
 
-            // Exit on 6 kills (no more auto-timeout)
-            if (st.copiesKilled >= KILLS_TO_ESCAPE) {
+            // Exit when copiesKilled + shadowLivesBroken >= 10
+            if (st.copiesKilled + st.shadowLivesBroken >= 10) {
+                RewardShadowManager.onVictory(player, st);
                 ServerPlayerEntity finalPlayer = player;
                 State finalSt = st;
                 player.server.execute(() -> {
-                    exit(finalPlayer, finalSt, true);
+                    exit(finalPlayer, finalSt, false);
                 });
                 it.remove();
             }
@@ -477,7 +491,7 @@ public class LiminalManager {
 
         for (ServerPlayerEntity p : new java.util.ArrayList<>(clone.getPlayers())) {
             State state = STATES.get(p.getUniqueID());
-            if (state != null && state.cloneReady) continue;
+            if (state != null) continue;
 
             ServerWorld overworld = clone.getServer().getWorld(net.minecraft.world.World.OVERWORLD);
             if (overworld != null) {
@@ -597,6 +611,11 @@ public class LiminalManager {
         double[] pos = spawnPos(world.rand, state.center, player);
         copy.setLocationAndAngles(pos[0], state.center.getY() + 1, pos[1], 0f, 0f);
         copy.setOwner(player.getUniqueID());
+        copy.setHostile(true);
+        copy.setAttackTarget(player);
+        if (world.rand.nextFloat() < 0.5F) {
+            copy.copyEquipmentFrom(player);
+        }
         boolean ok = world.addEntity(copy);
         if (ok) {
             state.activeCopies++;
@@ -661,7 +680,7 @@ public class LiminalManager {
         }
     }
 
-    private static void spawnGhostMob(ServerWorld w, State st, ServerPlayerEntity owner) {
+    public static void spawnGhostMob(ServerWorld w, State st, ServerPlayerEntity owner) {
         ZombieEntity ghost = EntityType.ZOMBIE.create(w);
         if (ghost == null) return;
         ghost.setChild(false);
@@ -679,7 +698,7 @@ public class LiminalManager {
         }
     }
 
-    private static void spawnArmedCopy(ServerWorld w, State st, ServerPlayerEntity owner) {
+    public static void spawnArmedCopy(ServerWorld w, State st, ServerPlayerEntity owner) {
         ZombieEntity soldier = EntityType.ZOMBIE.create(w);
         if (soldier == null) return;
         soldier.setChild(false);
@@ -702,7 +721,7 @@ public class LiminalManager {
         }
     }
 
-    private static void spawnArmedSkeleton(ServerWorld w, State st, ServerPlayerEntity owner) {
+    public static void spawnArmedSkeleton(ServerWorld w, State st, ServerPlayerEntity owner) {
         SkeletonEntity skele = EntityType.SKELETON.create(w);
         if (skele == null) return;
         ItemStack bow = new ItemStack(Items.BOW);

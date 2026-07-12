@@ -34,6 +34,17 @@ public final class LiminalDirector {
             }
         }
 
+        if (stage >= 3 && state.directorTimer % 300 == 0) {
+            int r = world.rand.nextInt(3);
+            if (r == 0) {
+                LiminalManager.spawnArmedCopy(world, state, player);
+            } else if (r == 1) {
+                LiminalManager.spawnArmedSkeleton(world, state, player);
+            } else {
+                LiminalManager.spawnGhostMob(world, state, player);
+            }
+        }
+
         if (stage >= 5 && state.directorTimer % 400 == 0) {
             player.addPotionEffect(new EffectInstance(Effects.BLINDNESS, 35, 0, false, false));
         }

@@ -8,8 +8,11 @@ import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.util.text.StringTextComponent;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 public class LiminalChatAI {
 
@@ -27,7 +30,23 @@ public class LiminalChatAI {
     };
 
     private static final Map<UUID, Long> lastCall = new HashMap<>();
+    private static final Map<UUID, String> customSystemPrompts = new HashMap<>();
     private static final long COOLDOWN_MS = 3000;
+
+    public static void setSystemPrompt(UUID playerId, String prompt) {
+        customSystemPrompts.put(playerId, prompt);
+    }
+
+    public static String getReply(UUID playerId, String message) {
+        List<GrokClient.Message> history = LiminalDialogue.get(playerId);
+        String sysPrompt = customSystemPrompts.getOrDefault(playerId, "");
+        try {
+            return GrokClient.ask(sysPrompt, history, message).get(10, TimeUnit.SECONDS);
+        } catch (Exception e) {
+            Random r = new Random();
+            return FALLBACKS[r.nextInt(FALLBACKS.length)];
+        }
+    }
 
     public static void onPlayerMessage(ServerPlayerEntity player, String rawMsg) {
         UUID pid = player.getUniqueID();

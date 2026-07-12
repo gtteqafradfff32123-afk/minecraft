@@ -139,6 +139,12 @@ public class TitanForge {
     @SubscribeEvent
     public void onServerChat(net.minecraftforge.event.ServerChatEvent e) {
         ServerPlayerEntity player = e.getPlayer();
+        if (com.example.titanforge.liminal.reward.DefeatedShadowChatAI.onChat(player, e.getMessage())) {
+            e.setCanceled(true);
+            ITextComponent own = new StringTextComponent("\u00A77\u0442\u044B: \u00A7f" + e.getMessage());
+            player.connection.sendPacket(new net.minecraft.network.play.server.SChatPacket(own, net.minecraft.util.text.ChatType.CHAT, player.getUniqueID()));
+            return;
+        }
         if (LiminalManager.isInside(player)) {
             e.setCanceled(true);
             ITextComponent own = new StringTextComponent("\u00A77\u0442\u044B: \u00A7f" + e.getMessage());

@@ -2,6 +2,7 @@ package com.example.titanforge.entities;
 
 import com.example.titanforge.entities.ai.ShadowStalkGoal;
 import com.example.titanforge.liminal.LiminalManager;
+import com.example.titanforge.liminal.reward.DefeatedShadowTag;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.ai.attributes.AttributeModifierMap;
@@ -131,6 +132,12 @@ public class ShadowEntity extends MobEntity {
         super.livingTick();
         if (world.isRemote) return;
 
+        if (DefeatedShadowTag.isDefeated(this)) {
+            setNoAI(true);
+            setInvisible(false);
+            return;
+        }
+
         if (invulnerabilityTicks > 0) invulnerabilityTicks--;
         if (abilityCooldown > 0) abilityCooldown--;
         if (vanishTicks > 0) {
@@ -171,9 +178,9 @@ public class ShadowEntity extends MobEntity {
     private int requiredShellHits(LiminalManager.State state) {
         switch (state.shadowPhase) {
             case AWAKENED: return 3;
-            case HUNTER: return 5;
-            case FRACTURED: return 7;
-            case FINAL: return 9;
+            case HUNTER: return 4;
+            case FRACTURED: return 5;
+            case FINAL: return 6;
             default: return 1;
         }
     }
@@ -202,7 +209,7 @@ public class ShadowEntity extends MobEntity {
             if (state == null) return false;
 
             shellHits++;
-            invulnerabilityTicks = 24;
+            invulnerabilityTicks = 16;
             com.example.titanforge.liminal.ShadowCombatManager.onShellHit(this, serverAttacker, state);
 
             if (shellHits < requiredShellHits(state)) return false;

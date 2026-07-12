@@ -1,5 +1,6 @@
 package com.example.titanforge;
 
+import com.example.titanforge.liminal.screen.LiminalLoadingPacket;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.network.NetworkDirection;
@@ -15,6 +16,7 @@ public class NetworkHandler {
 
     public static void register() {
         int id = 0;
+        INSTANCE.registerMessage(id++, LiminalLoadingPacket.class, LiminalLoadingPacket::encode, LiminalLoadingPacket::decode, LiminalLoadingPacket::handle);
         INSTANCE.registerMessage(id++, OpenGuiPacket.class, OpenGuiPacket::encode, OpenGuiPacket::decode, OpenGuiPacket::handle);
         INSTANCE.registerMessage(id++, ApplyEnchantPacket.class, ApplyEnchantPacket::encode, ApplyEnchantPacket::decode, ApplyEnchantPacket::handle);
         INSTANCE.registerMessage(id++, BloodRageSyncPacket.class, BloodRageSyncPacket::encode, BloodRageSyncPacket::decode, BloodRageSyncPacket::handle);

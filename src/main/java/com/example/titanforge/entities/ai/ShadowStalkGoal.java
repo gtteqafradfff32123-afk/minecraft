@@ -2,6 +2,7 @@ package com.example.titanforge.entities.ai;
 
 import com.example.titanforge.entities.ShadowEntity;
 import com.example.titanforge.liminal.LiminalManager;
+import com.example.titanforge.liminal.reward.DefeatedShadowTag;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.ai.goal.Goal;
 import net.minecraft.entity.player.PlayerEntity;
@@ -29,6 +30,7 @@ public class ShadowStalkGoal extends Goal {
 
     @Override
     public boolean shouldExecute() {
+        if (DefeatedShadowTag.isDefeated(shadow)) return false;
         UUID owner = shadow.getOwnerId().orElse(null);
         if (owner == null) return false;
         this.target = shadow.world.getPlayerByUuid(owner);
@@ -37,6 +39,7 @@ public class ShadowStalkGoal extends Goal {
 
     @Override
     public boolean shouldContinueExecuting() {
+        if (DefeatedShadowTag.isDefeated(shadow)) return false;
         return target != null && target.isAlive();
     }
 
