@@ -10,15 +10,19 @@ public final class ModBlocks {
     public static final DeferredRegister<Block> BLOCKS =
         DeferredRegister.create(ForgeRegistries.BLOCKS, TitanForge.MOD_ID);
 
-    public static final RegistryObject<Block> YELLOW_DECAY_BLOCK = BLOCKS.register(
-        "yellow_decay_block",
-        () -> new Block(Block.Properties.create(Material.ROCK)
-            .hardnessAndResistance(2.0F, 3.0F)));
-
     public static final RegistryObject<Block> RED_DECAY_BLOCK = BLOCKS.register(
         "red_decay_block",
-        () -> new Block(Block.Properties.create(Material.ROCK)
-            .hardnessAndResistance(2.0F, 3.0F)));
+        () -> new DecayBlock(null,
+            Block.Properties.create(Material.ROCK)
+                .hardnessAndResistance(2.0F, 3.0F)
+                .tickRandomly()));
+
+    public static final RegistryObject<Block> YELLOW_DECAY_BLOCK = BLOCKS.register(
+        "yellow_decay_block",
+        () -> new DecayBlock(RED_DECAY_BLOCK,
+            Block.Properties.create(Material.ROCK)
+                .hardnessAndResistance(2.0F, 3.0F)
+                .tickRandomly()));
 
     private ModBlocks() {}
 }
