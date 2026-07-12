@@ -53,11 +53,9 @@ public final class DeltaCopier {
                 if (dx * dx + dz * dz > radiusSq) continue;
 
                 for (int y = 0; y < 256; y++) {
-                    int dy = y - sourceCenter.getY();
                     int targetX = targetCenter.getX() + dx;
-                    int targetY = targetCenter.getY() + dy;
+                    int targetY = y;
                     int targetZ = targetCenter.getZ() + dz;
-                    if (targetY < 0 || targetY > 255) continue;
 
                     BlockState state = source.getBlockState(new BlockPos(sourceX, y, sourceZ));
 

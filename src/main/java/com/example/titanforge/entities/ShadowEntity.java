@@ -2,6 +2,7 @@ package com.example.titanforge.entities;
 
 import com.example.titanforge.entities.ai.ShadowStalkGoal;
 import com.example.titanforge.liminal.LiminalManager;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.ai.attributes.AttributeModifierMap;
@@ -272,15 +273,35 @@ public class ShadowEntity extends MobEntity {
         }
         if (defeated) return false;
 
-        if (source.getTrueSource() instanceof AbstractArrowEntity
-            || source.getTrueSource() instanceof TridentEntity) {
+        Entity immediate = source.getImmediateSource();
+        if (immediate instanceof AbstractArrowEntity
+            || immediate instanceof TridentEntity) {
             if (!world.isRemote) {
-                Vector3d look = getLookVec();
-                setMotion(look.x * 0.4D, 0.3D, look.z * 0.4D);
+                Vector3d projectileMotion = immediate.getMotion();
+                Vector3d side = new Vector3d(
+                    -projectileMotion.z, 0.0D, projectileMotion.x);
+
+                if (side.lengthSquared() < 1.0E-4D) {
+                    side = new Vector3d(1.0D, 0.0D, 0.0D);
+                } else {
+                    side = side.normalize();
+                }
+
+                if (world.rand.nextBoolean()) side = side.scale(-1.0D);
+
+                setMotion(side.x * 0.75D, 0.22D, side.z * 0.75D);
                 velocityChanged = true;
-                ((ServerWorld) world).spawnParticle(ParticleTypes.SMOKE,
+
+                ((ServerWorld) world).spawnParticle(
+                    ParticleTypes.SMOKE,
                     getPosX(), getPosY() + 1.0D, getPosZ(),
-                    12, 0.3D, 0.5D, 0.3D, 0.01D);
+                    18, 0.35D, 0.55D, 0.35D, 0.03D);
+                ((ServerWorld) world).spawnParticle(
+                    ParticleTypes.REVERSE_PORTAL,
+                    getPosX(), getPosY() + 1.0D, getPosZ(),
+                    12, 0.25D, 0.45D, 0.25D, 0.08D);
+
+                immediate.remove();
             }
             return false;
         }

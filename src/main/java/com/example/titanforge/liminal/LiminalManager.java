@@ -190,7 +190,6 @@ public class LiminalManager {
         TitanForge.LOGGER.info("[liminal] teleporting player={} to arena center {}",
             player.getName().getString(), center);
 
-        DeltaCopier.buildFloor(job.target, center, RADIUS);
         buildVoidWall(job.target, center, RADIUS);
         removeBedrock(job.target, center, RADIUS);
 
