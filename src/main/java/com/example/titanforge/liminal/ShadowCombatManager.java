@@ -168,14 +168,15 @@ public final class ShadowCombatManager {
     }
 
     public static void onShellHit(ShadowEntity shadow, ServerPlayerEntity player,
-                                  LiminalManager.State state) {
+                                  LiminalManager.State state, boolean teleport) {
         ServerWorld world = (ServerWorld) shadow.world;
         world.spawnParticle(ParticleTypes.DRAGON_BREATH,
                 shadow.getPosX(), shadow.getPosY() + 1.0D, shadow.getPosZ(),
                 30, 0.4D, 0.8D, 0.4D, 0.1D);
         world.playSound(null, shadow.getPosition(), SoundEvents.ENTITY_WITHER_HURT,
                 SoundCategory.HOSTILE, 0.8F, 0.45F);
-        teleportAroundPlayer(shadow, player, state);
+
+        if (teleport) teleportAroundPlayer(shadow, player, state);
     }
 
     public static void breakShell(ShadowEntity shadow, ServerPlayerEntity player,
@@ -184,21 +185,40 @@ public final class ShadowCombatManager {
         world.spawnParticle(ParticleTypes.EXPLOSION,
                 shadow.getPosX(), shadow.getPosY() + 1.0D, shadow.getPosZ(),
                 5, 0.5D, 0.8D, 0.5D, 0.0D);
-        falseSelf(world, player, state);
+
+        if (state.shadowPhase == ShadowPhase.FINAL) {
+            state.shadowLivesBroken = 4;
+            state.shadowSpawned = false;
+            shadow.remove();
+            LiminalManager.completeShadowVictory(player, state);
+            return;
+        }
+
+        int adds;
+        switch (state.shadowPhase) {
+            case AWAKENED: adds = 1; break;
+            case HUNTER: adds = 2; break;
+            case FRACTURED: adds = 2; break;
+            default: adds = 0;
+        }
+        for (int i = 0; i < adds; i++) {
+            LiminalManager.spawnDirectorCopy(world, state, player, state.collapseStage);
+        }
+
+        state.shadowLivesBroken++;
         advancePhase(state);
         state.shadowSpawned = false;
-        state.shadowRespawnTimer = Math.max(80, 220 - state.collapseStage * 12);
+        state.shadowRespawnTimer = 60;
         shadow.remove();
     }
 
     private static void advancePhase(LiminalManager.State state) {
-        if (state.shadowLivesBroken >= 4 || state.collapseStage >= 8)
-            state.shadowPhase = ShadowPhase.FINAL;
-        else if (state.shadowLivesBroken >= 3 || state.collapseStage >= 6)
-            state.shadowPhase = ShadowPhase.FRACTURED;
-        else if (state.shadowLivesBroken >= 1 || state.collapseStage >= 3)
-            state.shadowPhase = ShadowPhase.HUNTER;
-        else state.shadowPhase = ShadowPhase.AWAKENED;
+        switch (state.shadowLivesBroken) {
+            case 0: state.shadowPhase = ShadowPhase.AWAKENED; break;
+            case 1: state.shadowPhase = ShadowPhase.HUNTER; break;
+            case 2: state.shadowPhase = ShadowPhase.FRACTURED; break;
+            default: state.shadowPhase = ShadowPhase.FINAL; break;
+        }
     }
 
     private static void teleportAroundPlayer(ShadowEntity shadow, ServerPlayerEntity player,

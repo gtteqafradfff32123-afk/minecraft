@@ -1,6 +1,8 @@
 package com.example.titanforge.liminal.screen;
 
 import net.minecraft.network.PacketBuffer;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.network.NetworkEvent;
 
 import java.util.function.Supplier;
@@ -27,18 +29,13 @@ public final class LiminalLoadingPacket {
         return new LiminalLoadingPacket(buf.readVarInt(), buf.readFloat());
     }
 
-    public static void handle(LiminalLoadingPacket msg, Supplier<NetworkEvent.Context> contextSupplier) {
+    public static void handle(LiminalLoadingPacket msg,
+                              Supplier<NetworkEvent.Context> contextSupplier) {
         NetworkEvent.Context context = contextSupplier.get();
-        if (!context.getDirection().getReceptionSide().isClient()) return;
-        context.enqueueWork(() -> {
-            if (msg.action == START) {
-                LiminalLoadingClient.start();
-            } else if (msg.action == PROGRESS) {
-                LiminalLoadingClient.setProgress(msg.progress);
-            } else {
-                LiminalLoadingClient.stop();
-            }
-        });
+        context.enqueueWork(() ->
+            DistExecutor.unsafeRunWhenOn(Dist.CLIENT,
+                () -> () -> LiminalLoadingClient.handlePacket(
+                    msg.action, msg.progress)));
         context.setPacketHandled(true);
     }
 }

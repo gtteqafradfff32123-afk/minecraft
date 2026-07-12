@@ -1,11 +1,11 @@
 package com.example.titanforge.liminal.screen;
 
 import com.example.titanforge.TitanForge;
+import com.example.titanforge.liminal.LiminalDimension;
+import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.BufferBuilder;
-import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
@@ -13,108 +13,135 @@ import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
-
 import java.util.Random;
 
-@Mod.EventBusSubscriber(modid = TitanForge.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
+@Mod.EventBusSubscriber(
+    modid = TitanForge.MOD_ID,
+    bus = Mod.EventBusSubscriber.Bus.FORGE,
+    value = Dist.CLIENT
+)
 public final class LiminalClientOverlay {
-    private static final ResourceLocation VIGNETTE = new ResourceLocation("textures/misc/vignette.png");
-    private static final Random rand = new Random();
-    private static boolean renderedThisFrame = false;
+    private static final Random GRAIN = new Random();
+    private static int movieTicks;
+
+    private LiminalClientOverlay() {}
 
     @SubscribeEvent
     public static void onClientTick(TickEvent.ClientTickEvent event) {
-        if (event.phase == TickEvent.Phase.END) {
-            LiminalLoadingClient.tick();
-        }
+        if (event.phase != TickEvent.Phase.END) return;
+        LiminalLoadingClient.tick();
+        movieTicks++;
     }
 
     @SubscribeEvent
-    public static void onRenderOverlay(RenderGameOverlayEvent.Pre event) {
-        if (renderedThisFrame) return;
-        if (!LiminalLoadingClient.isActive()) return;
-        renderedThisFrame = true;
+    public static void onOverlay(RenderGameOverlayEvent.Post event) {
+        if (event.getType() != RenderGameOverlayEvent.ElementType.ALL) return;
 
         Minecraft mc = Minecraft.getInstance();
-        int w = mc.getMainWindow().getScaledWidth();
-        int h = mc.getMainWindow().getScaledHeight();
-        float prog = LiminalLoadingClient.getProgress();
+        if (mc.player == null || mc.world == null) return;
 
-        RenderSystem.disableDepthTest();
-        RenderSystem.depthMask(false);
+        MatrixStack matrix = event.getMatrixStack();
+        int width = mc.getMainWindow().getScaledWidth();
+        int height = mc.getMainWindow().getScaledHeight();
+
+        if (LiminalLoadingClient.isActive()
+            || LiminalLoadingClient.getOverlayStrength(event.getPartialTicks()) > 0.0F) {
+            renderLoading(matrix, mc, width, height, event.getPartialTicks());
+            return;
+        }
+
+        ResourceLocation current = mc.world.getDimensionKey().getLocation();
+        if (current.equals(LiminalDimension.LIMINAL_WORLD.getLocation())) {
+            renderOldMovie(matrix, width, height);
+        }
+    }
+
+    private static void renderLoading(MatrixStack matrix, Minecraft mc,
+                                      int width, int height, float partialTicks) {
+        float strength = LiminalLoadingClient.getOverlayStrength(partialTicks);
+        renderVignette(matrix, width, height, strength);
+
+        if (!LiminalLoadingClient.isActive()) return;
+
+        float progress = LiminalLoadingClient.getProgress();
+        String phrase = LiminalLoadingClient.getPhrase();
+        String percent = Math.round(progress * 100.0F) + "%";
+
+        int phraseWidth = mc.fontRenderer.getStringWidth(phrase);
+        int percentWidth = mc.fontRenderer.getStringWidth(percent);
+
+        mc.fontRenderer.drawStringWithShadow(matrix, phrase,
+            width / 2.0F - phraseWidth / 2.0F,
+            height / 2.0F - 18.0F, 0xFFD8D8D8);
+
+        mc.fontRenderer.drawStringWithShadow(matrix, percent,
+            width / 2.0F - percentWidth / 2.0F,
+            height / 2.0F + 9.0F, 0xFF686868);
+    }
+
+    private static void renderVignette(MatrixStack matrix, int width,
+                                       int height, float strength) {
         RenderSystem.enableBlend();
+        RenderSystem.defaultBlendFunc();
 
-        drawVignette(mc, w, h);
-        drawGrayscale(w, h, prog);
-        drawLoadingBar(w, h, prog);
+        int bands = 24;
+        int maxInset = Math.max(48, Math.min(width, height) / 3);
 
-        RenderSystem.depthMask(true);
-        RenderSystem.enableDepthTest();
+        for (int i = 0; i < bands; i++) {
+            float t = i / (float) bands;
+            int alpha = (int) (strength * 24.0F * (1.0F - t));
+            int color = (alpha << 24);
+            int inset = i * maxInset / bands;
+
+            AbstractGui.fill(matrix, inset, inset,
+                width - inset, inset + 5, color);
+            AbstractGui.fill(matrix, inset, height - inset - 5,
+                width - inset, height - inset, color);
+            AbstractGui.fill(matrix, inset, inset,
+                inset + 5, height - inset, color);
+            AbstractGui.fill(matrix, width - inset - 5, inset,
+                width - inset, height - inset, color);
+        }
+
         RenderSystem.disableBlend();
     }
 
-    @SubscribeEvent
-    public static void onPostOverlay(RenderGameOverlayEvent.Post event) {
-        if (event.getType() == RenderGameOverlayEvent.ElementType.ALL) {
-            renderedThisFrame = false;
-        }
-    }
-
-    private static void drawVignette(Minecraft mc, int w, int h) {
-        mc.getTextureManager().bindTexture(VIGNETTE);
-        RenderSystem.color4f(0.0F, 0.0F, 0.0F, 0.9F);
-        Tessellator tess = Tessellator.getInstance();
-        BufferBuilder buf = tess.getBuffer();
-        buf.begin(7, DefaultVertexFormats.POSITION_TEX);
-        buf.pos(0, 0, 0).tex(0, 0).endVertex();
-        buf.pos(w, 0, 0).tex(1, 0).endVertex();
-        buf.pos(w, h, 0).tex(1, 1).endVertex();
-        buf.pos(0, h, 0).tex(0, 1).endVertex();
-        tess.draw();
-    }
-
-    private static void drawGrayscale(int w, int h, float progress) {
-        float strength = (1.0F - progress) * 0.35F;
-        if (strength <= 0.0F) return;
-
+    private static void renderOldMovie(MatrixStack matrix, int width, int height) {
         RenderSystem.enableBlend();
-        RenderSystem.blendFuncSeparate(0x8001, 0x8002, 1, 0);
-        RenderSystem.blendColor(1.0F - strength, 1.0F - strength, 1.0F - strength, 1.0F);
+        RenderSystem.defaultBlendFunc();
 
-        Tessellator tess = Tessellator.getInstance();
-        BufferBuilder buf = tess.getBuffer();
-        buf.begin(7, DefaultVertexFormats.POSITION);
-        buf.pos(0, 0, 0).endVertex();
-        buf.pos(w, 0, 0).endVertex();
-        buf.pos(w, h, 0).endVertex();
-        buf.pos(0, h, 0).endVertex();
-        tess.draw();
-    }
+        AbstractGui.fill(matrix, 0, 0, width, height, 0x171C1208);
 
-    private static void drawLoadingBar(int w, int h, float progress) {
-        int barW = w * 2 / 3;
-        int barH = 4;
-        int barX = (w - barW) / 2;
-        int barY = h - 40;
+        int offset = movieTicks & 3;
+        for (int y = offset; y < height; y += 4) {
+            AbstractGui.fill(matrix, 0, y, width, y + 1, 0x16000000);
+        }
 
-        fill(barX, barY, barX + barW, barY + barH, 0xFFFFFFFF);
-        fill(barX + 1, barY + 1, barX + barW - 1, barY + barH - 1, 0xFF000000);
-        fill(barX + 1, barY + 1, barX + 1 + (int)((barW - 2) * progress), barY + barH - 1, 0xFFFFFFFF);
-    }
+        GRAIN.setSeed(movieTicks * 341873128712L);
+        int grainCount = Math.max(90, width * height / 5200);
+        for (int i = 0; i < grainCount; i++) {
+            int x = GRAIN.nextInt(Math.max(1, width));
+            int y = GRAIN.nextInt(Math.max(1, height));
+            int size = 1 + GRAIN.nextInt(2);
+            int color = GRAIN.nextBoolean() ? 0x18FFFFFF : 0x18000000;
+            AbstractGui.fill(matrix, x, y, x + size, y + size, color);
+        }
 
-    private static void fill(int left, int top, int right, int bottom, int color) {
-        if (left >= right || top >= bottom) return;
-        float a = (color >> 24 & 255) / 255.0F;
-        float r = (color >> 16 & 255) / 255.0F;
-        float g = (color >> 8 & 255) / 255.0F;
-        float b = (color & 255) / 255.0F;
-        Tessellator tess = Tessellator.getInstance();
-        BufferBuilder buf = tess.getBuffer();
-        buf.begin(7, DefaultVertexFormats.POSITION_COLOR);
-        buf.pos(left, bottom, 0).color(r, g, b, a).endVertex();
-        buf.pos(right, bottom, 0).color(r, g, b, a).endVertex();
-        buf.pos(right, top, 0).color(r, g, b, a).endVertex();
-        buf.pos(left, top, 0).color(r, g, b, a).endVertex();
-        tess.draw();
+        if (movieTicks % 7 == 0) {
+            int scratches = 1 + GRAIN.nextInt(3);
+            for (int i = 0; i < scratches; i++) {
+                int x = GRAIN.nextInt(Math.max(1, width));
+                AbstractGui.fill(matrix, x, 0, x + 1, height, 0x22E8DEC8);
+            }
+        }
+
+        int flicker = 5 + (int) ((Math.sin(movieTicks * 0.31D) + 1.0D) * 4.0D);
+        AbstractGui.fill(matrix, 0, 0, width, height,
+            (flicker << 24) | 0x00F0D8A0);
+
+        renderVignette(matrix, width, height, 0.42F);
+
+        RenderSystem.color4f(1F, 1F, 1F, 1F);
+        RenderSystem.disableBlend();
     }
 }

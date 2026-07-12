@@ -2,7 +2,6 @@ package com.example.titanforge.entities;
 
 import com.example.titanforge.entities.ai.ShadowStalkGoal;
 import com.example.titanforge.liminal.LiminalManager;
-import com.example.titanforge.liminal.reward.DefeatedShadowTag;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.ai.attributes.AttributeModifierMap;
@@ -10,8 +9,6 @@ import net.minecraft.entity.ai.attributes.Attributes;
 import net.minecraft.entity.ai.goal.SwimGoal;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.entity.projectile.AbstractArrowEntity;
-import net.minecraft.entity.projectile.TridentEntity;
 import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
@@ -40,12 +37,24 @@ public class ShadowEntity extends MobEntity {
     private GameProfile cachedProfile;
     private int spawnCopyTimer = 0;
     private int shellHits;
+    private int acceptedShellHits;
     private int invulnerabilityTicks;
     private int abilityCooldown;
     private int vanishTicks;
     private int attackWindup;
     private int currentAbility;
     private BlockPos ritualCenter;
+
+    public enum DefeatedMode {
+        STAY,
+        FOLLOW,
+        RETURN_HOME
+    }
+
+    private boolean defeated;
+    private UUID defeatedOwner;
+    private BlockPos rewardHome;
+    private DefeatedMode defeatedMode = DefeatedMode.STAY;
 
     public ShadowEntity(EntityType<? extends MobEntity> type, World world) {
         super(type, world);
@@ -101,10 +110,80 @@ public class ShadowEntity extends MobEntity {
         return cachedProfile;
     }
 
+    public void makeDefeated(UUID owner, BlockPos home) {
+        this.defeated = true;
+        this.defeatedOwner = owner;
+        this.rewardHome = home.toImmutable();
+        this.defeatedMode = DefeatedMode.STAY;
+        this.setAggressive(false);
+        this.setTarget(false);
+        this.setInvulnerable(true);
+        this.getNavigator().clearPath();
+    }
+
+    public boolean isDefeated() {
+        return defeated;
+    }
+
+    public UUID getDefeatedOwner() {
+        return defeatedOwner;
+    }
+
+    public void setDefeatedMode(DefeatedMode mode) {
+        if (!defeated) return;
+        defeatedMode = mode;
+        if (mode == DefeatedMode.STAY) getNavigator().clearPath();
+    }
+
+    private void tickDefeated() {
+        if (!defeated || rewardHome == null) return;
+
+        PlayerEntity owner = defeatedOwner == null
+            ? null : world.getPlayerByUuid(defeatedOwner);
+
+        if (defeatedMode == DefeatedMode.FOLLOW) {
+            if (owner == null) {
+                defeatedMode = DefeatedMode.RETURN_HOME;
+                return;
+            }
+            double distance = this.getDistance(owner);
+            if (distance > 5.0D) {
+                getNavigator().tryMoveToEntityLiving(owner, 0.9D);
+            } else if (distance < 2.8D) {
+                getNavigator().clearPath();
+            }
+            getLookController().setLookPositionWithEntity(owner, 20F, 20F);
+            return;
+        }
+
+        if (defeatedMode == DefeatedMode.RETURN_HOME) {
+            double distanceSq = getDistanceSq(
+                rewardHome.getX() + 0.5D,
+                rewardHome.getY(),
+                rewardHome.getZ() + 0.5D);
+            if (distanceSq <= 2.25D) {
+                getNavigator().clearPath();
+                defeatedMode = DefeatedMode.STAY;
+            } else {
+                getNavigator().tryMoveToXYZ(
+                    rewardHome.getX() + 0.5D,
+                    rewardHome.getY(),
+                    rewardHome.getZ() + 0.5D,
+                    0.9D);
+            }
+            return;
+        }
+
+        getNavigator().clearPath();
+        setMotion(0.0D, getMotion().y, 0.0D);
+    }
+
     public void setTarget(boolean b) {
         this.dataManager.set(IS_TARGET, b);
         if (b) {
             this.addPotionEffect(new EffectInstance(Effects.GLOWING, Integer.MAX_VALUE, 0, false, false));
+        } else {
+            this.removePotionEffect(Effects.GLOWING);
         }
     }
 
@@ -132,9 +211,8 @@ public class ShadowEntity extends MobEntity {
         super.livingTick();
         if (world.isRemote) return;
 
-        if (DefeatedShadowTag.isDefeated(this)) {
-            setNoAI(true);
-            setInvisible(false);
+        if (defeated) {
+            tickDefeated();
             return;
         }
 
@@ -190,6 +268,7 @@ public class ShadowEntity extends MobEntity {
         if (source == DamageSource.OUT_OF_WORLD) {
             return super.attackEntityFrom(source, amount);
         }
+        if (defeated) return false;
         if (!world.isRemote && source.getTrueSource() instanceof ServerPlayerEntity) {
             ServerPlayerEntity attacker = (ServerPlayerEntity) source.getTrueSource();
 
@@ -209,13 +288,14 @@ public class ShadowEntity extends MobEntity {
             if (state == null) return false;
 
             shellHits++;
+            acceptedShellHits++;
             invulnerabilityTicks = 16;
-            com.example.titanforge.liminal.ShadowCombatManager.onShellHit(this, serverAttacker, state);
+            com.example.titanforge.liminal.ShadowCombatManager.onShellHit(
+                this, serverAttacker, state, acceptedShellHits % 3 == 0);
 
             if (shellHits < requiredShellHits(state)) return false;
 
             shellHits = 0;
-            state.shadowLivesBroken++;
             com.example.titanforge.liminal.ShadowCombatManager.breakShell(this, serverAttacker, state);
             return false;
         }
@@ -227,6 +307,15 @@ public class ShadowEntity extends MobEntity {
         super.writeAdditional(nbt);
         getOwnerId().ifPresent(id -> nbt.putUniqueId("ShadowOwner", id));
         nbt.putBoolean("Aggressive", isAggressive());
+        nbt.putBoolean("TitanForgeDefeated", defeated);
+        if (defeatedOwner != null)
+            nbt.putUniqueId("TitanForgeDefeatedOwner", defeatedOwner);
+        if (rewardHome != null) {
+            nbt.putInt("TitanForgeHomeX", rewardHome.getX());
+            nbt.putInt("TitanForgeHomeY", rewardHome.getY());
+            nbt.putInt("TitanForgeHomeZ", rewardHome.getZ());
+        }
+        nbt.putString("TitanForgeDefeatedMode", defeatedMode.name());
     }
 
     @Override
@@ -234,5 +323,24 @@ public class ShadowEntity extends MobEntity {
         super.readAdditional(nbt);
         if (nbt.hasUniqueId("ShadowOwner")) setOwner(nbt.getUniqueId("ShadowOwner"));
         setAggressive(nbt.getBoolean("Aggressive"));
+        defeated = nbt.getBoolean("TitanForgeDefeated");
+        if (nbt.hasUniqueId("TitanForgeDefeatedOwner"))
+            defeatedOwner = nbt.getUniqueId("TitanForgeDefeatedOwner");
+        if (nbt.contains("TitanForgeHomeX")) {
+            rewardHome = new BlockPos(
+                nbt.getInt("TitanForgeHomeX"),
+                nbt.getInt("TitanForgeHomeY"),
+                nbt.getInt("TitanForgeHomeZ"));
+        }
+        try {
+            defeatedMode = DefeatedMode.valueOf(
+                nbt.getString("TitanForgeDefeatedMode"));
+        } catch (Exception ignored) {
+            defeatedMode = DefeatedMode.STAY;
+        }
+        if (defeated) {
+            setAggressive(false);
+            setInvulnerable(true);
+        }
     }
 }

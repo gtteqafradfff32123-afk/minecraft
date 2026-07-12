@@ -168,20 +168,24 @@ public class PlayerCopyEntity extends CreatureEntity {
 
     @Override
     public boolean attackEntityFrom(DamageSource source, float amount) {
-        if (source == DamageSource.OUT_OF_WORLD) return super.attackEntityFrom(source, amount);
-        return false;
+        if (source == DamageSource.OUT_OF_WORLD) {
+            return super.attackEntityFrom(source, amount);
+        }
+
+        if (!(source.getTrueSource() instanceof ServerPlayerEntity)) return false;
+        ServerPlayerEntity attacker = (ServerPlayerEntity) source.getTrueSource();
+        UUID owner = getOwnerId().orElse(null);
+        if (owner == null || !owner.equals(attacker.getUniqueID())) return false;
+
+        return super.attackEntityFrom(source, amount);
     }
 
     @Override
-    public void onDeath(DamageSource cause) {
-        if (!world.isRemote) {
-            getOwnerId().ifPresent(id -> {
-                LiminalManager.State st = LiminalManager.getState(id);
-                if (st != null) {
-                    st.copiesKilled++;
-                }
-            });
+    public void onDeath(DamageSource source) {
+        if (!world.isRemote && source.getTrueSource() instanceof ServerPlayerEntity) {
+            LiminalManager.onCopyKilled(
+                this, (ServerPlayerEntity) source.getTrueSource());
         }
-        super.onDeath(cause);
+        super.onDeath(source);
     }
 }

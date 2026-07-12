@@ -404,17 +404,17 @@ public class LiminalManager {
                 player.addPotionEffect(new EffectInstance(Effects.SLOWNESS, duration, amplifier, false, false));
             }
 
-            // Shadow respawn after being killed
-            if (!st.shadowSpawned && st.shadowRespawnTimer > 0 && st.copiesKilled < KILLS_TO_ESCAPE) {
+            // Shadow respawn during boss fight (after breaking a shell)
+            if (st.finalRitualStarted
+                && !st.shadowSpawned
+                && st.shadowRespawnTimer > 0
+                && st.shadowLivesBroken < 4) {
                 st.shadowRespawnTimer--;
                 if (st.shadowRespawnTimer == 0) {
                     st.shadowSpawned = spawnShadow(clone, st, player);
-                    if (st.shadowSpawned && st.shadowAwakened) {
-                        ShadowEntity se = (ShadowEntity) clone.getEntityByUuid(st.shadowId);
-                        if (se != null) {
-                            se.setAggressive(true);
-                            LiminalManager.sendCopyMessage(player, "\u0422\u044B \u0434\u0443\u043C\u0430\u043B, \u044D\u0442\u043E \u043A\u043E\u043D\u0435\u0446? \u041C\u044B \u0442\u043E\u043B\u044C\u043A\u043E \u043D\u0430\u0447\u0438\u043D\u0430\u0435\u043C.");
-                        }
+                    Entity entity = st.shadowId == null ? null : clone.getEntityByUuid(st.shadowId);
+                    if (entity instanceof ShadowEntity) {
+                        ((ShadowEntity) entity).setAggressive(true);
                     }
                 }
             }
@@ -452,8 +452,10 @@ public class LiminalManager {
                 }
             }
 
-            // Director-based copy spawning
-            LiminalDirector.tick(clone, player, st);
+            // Director-based copy spawning (disabled during boss fight)
+            if (!st.finalRitualStarted) {
+                LiminalDirector.tick(clone, player, st);
+            }
 
             // Wall self-repair every 10 seconds
             if (st.ticks % 200 == 0) {
@@ -477,15 +479,31 @@ public class LiminalManager {
                 sendRageMusicPacket(player);
             }
 
-            // Exit when copiesKilled + shadowLivesBroken >= 10
-            if (st.copiesKilled + st.shadowLivesBroken >= 10) {
-                RewardShadowManager.onVictory(player, st);
-                ServerPlayerEntity finalPlayer = player;
-                State finalSt = st;
-                player.server.execute(() -> {
-                    exit(finalPlayer, finalSt, false);
-                });
-                it.remove();
+            // Prologue complete: start boss fight
+            if (st.copiesKilled >= KILLS_TO_ESCAPE && !st.finalRitualStarted) {
+                st.finalRitualStarted = true;
+                st.shadowLivesBroken = 0;
+                st.shadowPhase = ShadowPhase.AWAKENED;
+                st.shadowRespawnTimer = 0;
+
+                for (UUID id : new ArrayList<>(st.copyIds)) {
+                    Entity copy = clone.getEntityByUuid(id);
+                    if (copy != null) copy.remove();
+                }
+                st.copyIds.clear();
+                st.spawnTicks.clear();
+                st.activeCopies = 0;
+
+                Entity oldShadow = st.shadowId == null
+                    ? null : clone.getEntityByUuid(st.shadowId);
+                if (oldShadow != null) oldShadow.remove();
+
+                st.shadowSpawned = spawnShadow(clone, st, player);
+                Entity boss = st.shadowId == null ? null : clone.getEntityByUuid(st.shadowId);
+                if (boss instanceof ShadowEntity) {
+                    ((ShadowEntity) boss).setAggressive(true);
+                }
+                sendCopyMessage(player, "\u0428\u0435\u0441\u0442\u044C \u043E\u0442\u0440\u0430\u0436\u0435\u043D\u0438\u0439 \u0440\u0430\u0437\u0431\u0438\u0442\u044B. \u0422\u0435\u043F\u0435\u0440\u044C \u043E\u0441\u0442\u0430\u043D\u0435\u0442\u0441\u044F \u0442\u043E\u043B\u044C\u043A\u043E \u043E\u0434\u043D\u043E.");
             }
         }
 
@@ -741,6 +759,27 @@ public class LiminalManager {
         }
     }
 
+    public static void onCopyKilled(PlayerCopyEntity copy,
+                                     ServerPlayerEntity killer) {
+        UUID owner = copy.getOwnerId().orElse(null);
+        if (owner == null || !owner.equals(killer.getUniqueID())) return;
+
+        State state = STATES.get(owner);
+        if (state == null) return;
+
+        UUID copyId = copy.getUniqueID();
+        boolean tracked = state.copyIds.remove(copyId);
+        state.spawnTicks.remove(copyId);
+        if (tracked) {
+            state.activeCopies = Math.max(0, state.activeCopies - 1);
+        }
+
+        if (tracked && !state.finalRitualStarted) {
+            state.copiesKilled = Math.min(
+                KILLS_TO_ESCAPE, state.copiesKilled + 1);
+        }
+    }
+
     public static void onShadowKilled(ServerPlayerEntity vp) {
         State st = STATES.get(vp.getUniqueID());
         if (st == null) return;
@@ -954,6 +993,14 @@ public class LiminalManager {
         STATES.remove(player.getUniqueID());
 
         if (early) player.addPotionEffect(new EffectInstance(Effects.WITHER, 10 * 20, 0));
+    }
+
+    public static void completeShadowVictory(ServerPlayerEntity player, State state) {
+        player.server.execute(() -> {
+            exit(player, state, true);
+            player.server.execute(() ->
+                RewardShadowManager.spawnAfterVictory(player));
+        });
     }
 
     public static void forceExit(ServerPlayerEntity player, boolean died) {
