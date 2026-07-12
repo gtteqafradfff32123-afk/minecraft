@@ -484,7 +484,7 @@ public class LiminalManager {
             }
         }
 
-        for (ServerPlayerEntity p : clone.getPlayers()) {
+        for (ServerPlayerEntity p : new java.util.ArrayList<>(clone.getPlayers())) {
             State state = STATES.get(p.getUniqueID());
             if (state != null && state.cloneReady) continue;
 
@@ -508,7 +508,7 @@ public class LiminalManager {
 
     public static void clearDimensionIfEmpty(ServerWorld clone) {
         if (clone == null) return;
-        if (!clone.getPlayers().isEmpty()) return;
+        if (!new java.util.ArrayList<>(clone.getPlayers()).isEmpty()) return;
         TitanForge.LOGGER.info("[liminal] dimension empty");
     }
 
