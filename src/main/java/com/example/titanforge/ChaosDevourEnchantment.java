@@ -44,4 +44,14 @@ public class ChaosDevourEnchantment extends Enchantment {
     public boolean canApplyAtEnchantingTable(ItemStack stack) {
         return false;
     }
+
+    @Override
+    public boolean canGenerateInLoot() {
+        return false;
+    }
+
+    @Override
+    public boolean canVillagerTrade() {
+        return false;
+    }
 }

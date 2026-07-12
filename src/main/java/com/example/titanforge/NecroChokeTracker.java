@@ -1,6 +1,6 @@
 package com.example.titanforge;
 
-import com.example.titanforge.entities.BlindGolemEntity;
+import com.example.titanforge.entities.GraveglassColossusEntity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.particles.ParticleTypes;
@@ -67,8 +67,8 @@ public class NecroChokeTracker {
     }
 
     public static void onDeath(LivingEntity dead, ServerWorld world) {
-        if (dead instanceof BlindGolemEntity) {
-            onGolemRemoved(((BlindGolemEntity) dead).getOwnerId());
+        if (dead instanceof GraveglassColossusEntity) {
+            onGolemRemoved(((GraveglassColossusEntity) dead).getOwnerId());
             return;
         }
 
@@ -85,11 +85,11 @@ public class NecroChokeTracker {
             return;
         }
 
-        BlindGolemEntity golem = ModEntities.BLIND_GOLEM.get().create(world);
-        if (golem != null) {
-            golem.setPosition(dead.getPosX(), dead.getPosY(), dead.getPosZ());
-            golem.setOwner(ownerId);
-            world.addEntity(golem);
+        GraveglassColossusEntity colossus = ModEntities.GRAVEGLASS_COLOSSUS.get().create(world);
+        if (colossus != null) {
+            colossus.setPosition(dead.getPosX(), dead.getPosY(), dead.getPosZ());
+            colossus.setOwner(ownerId);
+            world.addEntity(colossus);
             activeGolems.put(ownerId, activeGolems.getOrDefault(ownerId, 0) + 1);
             // Spawn effects
             world.spawnParticle(net.minecraft.particles.ParticleTypes.SOUL,
@@ -99,10 +99,10 @@ public class NecroChokeTracker {
             world.playSound(null, new net.minecraft.util.math.BlockPos(dead.getPosX(), dead.getPosY(), dead.getPosZ()),
                 net.minecraft.util.SoundEvents.ENTITY_ZOMBIE_VILLAGER_CONVERTED,
                 net.minecraft.util.SoundCategory.HOSTILE, 0.8F, 0.3F);
-            com.example.titanforge.TitanForge.LOGGER.info("[NecroUndertow] golem spawned for {} at death of {}",
+            com.example.titanforge.TitanForge.LOGGER.info("[NecroUndertow] colossus spawned for {} at death of {}",
                 inst.owner.getName().getString(), dead.getName().getString());
         } else {
-            com.example.titanforge.TitanForge.LOGGER.warn("[NecroUndertow] golem entity creation returned null");
+            com.example.titanforge.TitanForge.LOGGER.warn("[NecroUndertow] colossus entity creation returned null");
         }
     }
 

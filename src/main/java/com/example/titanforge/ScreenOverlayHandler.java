@@ -78,7 +78,7 @@ public class ScreenOverlayHandler {
                 renderColoredVignette(stack, 1.0F, 0.0F, 0.0F, alpha, width, height);
             }
         } catch (Throwable t) {
-            System.out.println("[TitanForge-ScreenOverlay] " + t.getClass().getName() + ": " + t.getMessage());
+            TitanForge.LOGGER.error("[TitanForge-ScreenOverlay] Error in event", t);
         }
     }
 

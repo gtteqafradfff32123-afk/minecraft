@@ -24,35 +24,10 @@ public class PlayMusicPacket {
         return new PlayMusicPacket(buf.readString());
     }
 
-    public static void handle(PlayMusicPacket msg, Supplier<NetworkEvent.Context> ctx) {
-        ctx.get().enqueueWork(() -> {
-            try {
-                Minecraft mc = Minecraft.getInstance();
-                if (mc.player != null) {
-                    mc.getSoundHandler().play(new FadingSound(msg.soundName, SoundCategory.AMBIENT));
-                }
-            } catch (Exception e) {
-                com.example.titanforge.TitanForge.LOGGER.error("[PlayMusicPacket] failed: {}", e.getMessage());
-            }
-        });
+    public static void handle(PlayMusicPacket msg,
+                              java.util.function.Supplier<NetworkEvent.Context> ctx) {
+        ctx.get().enqueueWork(() ->
+                com.example.titanforge.client.LiminalMusicController.play(msg.soundName));
         ctx.get().setPacketHandled(true);
-    }
-
-    private static class FadingSound extends SimpleSound {
-        private final long startTime = System.currentTimeMillis();
-        private static final long FADE_DURATION = 3000;
-
-        public FadingSound(String soundName, SoundCategory category) {
-            super(new net.minecraft.util.ResourceLocation("titanforge", soundName),
-                  category, 0.2F, 1.0F, true, 0,
-                  ISound.AttenuationType.NONE, 0.0D, 0.0D, 0.0D, true);
-        }
-
-        @Override
-        public float getVolume() {
-            long elapsed = System.currentTimeMillis() - startTime;
-            float progress = Math.min(1.0F, (float) elapsed / FADE_DURATION);
-            return Math.max(0.05F, progress * 0.5F);
-        }
     }
 }

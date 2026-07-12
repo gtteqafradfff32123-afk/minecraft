@@ -1,8 +1,5 @@
 package com.example.titanforge;
 
-import com.example.titanforge.backrooms.BackroomsDebugCommand;
-import com.example.titanforge.backrooms.BackroomsDimension;
-import com.example.titanforge.backrooms.BackroomsSessionManager;
 import com.example.titanforge.entities.PlayerCopyEntity;
 import com.example.titanforge.entities.ShadowEntity;
 import com.example.titanforge.entities.StunZombieEntity;
@@ -63,8 +60,15 @@ public class TitanForge {
         MinecraftForge.EVENT_BUS.register(new ChunkCopyManager());
         MinecraftForge.EVENT_BUS.register(new KineticDeflectorHandler());
         MinecraftForge.EVENT_BUS.register(new com.example.titanforge.liminal.LiminalProtectionHandler());
+        MinecraftForge.EVENT_BUS.register(new UnstableEdgeHandler());
+        MinecraftForge.EVENT_BUS.register(new com.example.titanforge.liminal.LiminalArenaCleaner());
 
         LiminalAIConfig.register();
+
+        net.minecraftforge.fml.ModLoadingContext.get().registerConfig(
+                net.minecraftforge.fml.config.ModConfig.Type.CLIENT,
+                ClientConfig.SPEC,
+                "titanforge-client.toml");
     }
 
     private void setup(final FMLCommonSetupEvent event) {
@@ -107,12 +111,10 @@ public class TitanForge {
     @SubscribeEvent
     public void onServerStart(FMLServerStartingEvent e) {
         LiminalDimension.syncSeedWithOverworld(e.getServer());
-        BackroomsDimension.get(e.getServer());
     }
 
     @SubscribeEvent
     public void onRegisterCommands(RegisterCommandsEvent e) {
-        BackroomsDebugCommand.register(e.getDispatcher());
         e.getDispatcher().register(Commands.literal("enchanter")
             .requires(s -> s.hasPermissionLevel(0))
             .executes(ctx -> {
@@ -152,21 +154,16 @@ public class TitanForge {
         if (sw.getDimensionKey() == LiminalDimension.LIMINAL_WORLD) {
             LiminalManager.tick(sw);
         }
-        if (sw.getDimensionKey() == BackroomsDimension.WORLD) {
-            BackroomsSessionManager.tick(sw);
-        }
     }
 
     @SubscribeEvent
     public void onPlayerDeath(net.minecraftforge.event.entity.living.LivingDeathEvent e) {
         if (e.getEntityLiving() instanceof ServerPlayerEntity) {
             ServerPlayerEntity p = (ServerPlayerEntity) e.getEntityLiving();
-            if (BackroomsSessionManager.isInBackrooms(p)) {
-                BackroomsSessionManager.onPlayerDeath(p);
-            } else if (LiminalManager.isInside(p)) {
+            if (LiminalManager.isInside(p)) {
                 LiminalManager.forceExit(p, true);
             } else {
-                LiminalManager.onPlayerDeath(p.getUniqueID());
+                LiminalManager.onPlayerDeath(p);
             }
         }
     }
@@ -178,9 +175,22 @@ public class TitanForge {
     }
 
     @SubscribeEvent
+    public void onDimensionChange(net.minecraftforge.event.entity.player.PlayerEvent.PlayerChangedDimensionEvent e) {
+        if (!(e.getPlayer() instanceof ServerPlayerEntity)) return;
+        ServerPlayerEntity p = (ServerPlayerEntity) e.getPlayer();
+        if (e.getFrom() == com.example.titanforge.liminal.LiminalDimension.LIMINAL_WORLD
+                && e.getTo() != com.example.titanforge.liminal.LiminalDimension.LIMINAL_WORLD) {
+            TitanForge.LOGGER.info("[liminal] player changed dimension from liminal to {} — cleanup",
+                e.getTo().getLocation().toString());
+            LiminalManager.onExternalDimensionExit(p);
+        }
+    }
+
+    @SubscribeEvent
     public void onLogout(PlayerEvent.PlayerLoggedOutEvent e) {
-        BackroomsSessionManager.onLogout(e.getPlayer().getUniqueID());
-        LiminalManager.onLogout(e.getPlayer().getUniqueID());
+        if (e.getPlayer() instanceof ServerPlayerEntity) {
+            LiminalManager.onLogout((ServerPlayerEntity) e.getPlayer());
+        }
     }
 
     @SubscribeEvent

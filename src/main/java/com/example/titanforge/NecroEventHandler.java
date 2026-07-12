@@ -86,7 +86,7 @@ public class NecroEventHandler {
         ServerPlayerEntity owner = (ServerPlayerEntity) event.getPlayer();
         if (owner.getCooldownTracker().hasCooldown(sword.getItem())) return;
 
-        if (!LiminalManager.enter(victim, owner, 360)) return;
+        if (!LiminalGateway.enter(victim, owner, 360)) return;
         owner.getCooldownTracker().setCooldown(sword.getItem(), 180 * 20);
         owner.setHealth(Math.max(1.0F, owner.getHealth() - 6.0F));
         sword.damageItem(30, owner, p -> {});
@@ -161,7 +161,7 @@ public class NecroEventHandler {
     @SubscribeEvent
     public static void onBreakWall(net.minecraftforge.event.world.BlockEvent.BreakEvent event) {
         if (!(event.getPlayer() instanceof net.minecraft.entity.player.ServerPlayerEntity)) return;
-        if (!LiminalManager.isInside(event.getPlayer())) return;
+        if (!LiminalGateway.isInside(event.getPlayer())) return;
         if (event.getState().getBlock() == Blocks.BLACK_CONCRETE)
             event.setCanceled(true);
     }

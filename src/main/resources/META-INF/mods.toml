@@ -6,11 +6,10 @@ license="All rights reserved"
 modId="titanforge"
 version="1.0.0"
 displayName="TitanForge"
-logoFile=""
 credits=""
 authors=""
 description='''
-TitanForge mod - custom enchanting GUI with 10 new enchantments
+TitanForge mod - custom enchanting GUI with 38 new enchantments
 '''
 [[dependencies.titanforge]]
     modId="forge"

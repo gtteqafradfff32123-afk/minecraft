@@ -214,4 +214,18 @@ public class ShadowEntity extends MobEntity {
         }
         return false;
     }
+
+    @Override
+    public void writeAdditional(net.minecraft.nbt.CompoundNBT nbt) {
+        super.writeAdditional(nbt);
+        getOwnerId().ifPresent(id -> nbt.putUniqueId("ShadowOwner", id));
+        nbt.putBoolean("Aggressive", isAggressive());
+    }
+
+    @Override
+    public void readAdditional(net.minecraft.nbt.CompoundNBT nbt) {
+        super.readAdditional(nbt);
+        if (nbt.hasUniqueId("ShadowOwner")) setOwner(nbt.getUniqueId("ShadowOwner"));
+        setAggressive(nbt.getBoolean("Aggressive"));
+    }
 }

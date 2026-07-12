@@ -1,0 +1,15 @@
+{
+  "targets": ["film_swap"],
+  "passes": [
+    {
+      "name": "titanforge:liminal_old_film",
+      "intarget": "minecraft:main",
+      "outtarget": "film_swap"
+    },
+    {
+      "name": "blit",
+      "intarget": "film_swap",
+      "outtarget": "minecraft:main"
+    }
+  ]
+}

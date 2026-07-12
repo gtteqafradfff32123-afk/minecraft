@@ -109,6 +109,7 @@ public class EnchanterScreen extends ContainerScreen<EnchanterContainer> {
     private Enchantment hoveredEnchant = null;
     private List<String> wrappedDescLines = new ArrayList<>();
     private List<String> wrappedHelpLines = new ArrayList<>();
+    private List<String> wrappedLoreLines = new ArrayList<>();
 
     public EnchanterScreen(EnchanterContainer container, PlayerInventory inv, net.minecraft.util.text.ITextComponent title) {
         super(container, inv, title);
@@ -179,6 +180,11 @@ public class EnchanterScreen extends ContainerScreen<EnchanterContainer> {
         if (!help.contains("enchantment.")) {
             wrappedHelpLines.addAll(wrapText(help, DESC_W));
         }
+        
+        String lore = I18n.format("enchantment." + rl.getNamespace() + "." + path + ".lore");
+        if (!lore.contains("enchantment.")) {
+            wrappedLoreLines.addAll(wrapText(lore, DESC_W - 6));
+        }
     }
 
     private Enchantment getSelectedEnchantment() {
@@ -223,16 +229,40 @@ public class EnchanterScreen extends ContainerScreen<EnchanterContainer> {
 
                     int lineY = descTop + 14;
                     int visibleHeight = DESC_H - 16;
-                    for (int i = descScrollOffset; i < wrappedDescLines.size(); i++) {
+                    
+                    List<String> curDesc = wrappedDescLines;
+                    List<String> curHelp = wrappedHelpLines;
+                    List<String> curLore = wrappedLoreLines;
+                    
+                    if (displayEnch != getSelectedEnchantment()) {
+                        curDesc = wrapText(I18n.format("enchantment." + rl.getNamespace() + "." + path + ".desc"), DESC_W);
+                        curHelp = wrapText(I18n.format("enchantment." + rl.getNamespace() + "." + path + ".help"), DESC_W);
+                        String loreRaw = I18n.format("enchantment." + rl.getNamespace() + "." + path + ".lore");
+                        curLore = loreRaw.contains("enchantment.") ? new ArrayList<>() : wrapText(loreRaw, DESC_W - 6);
+                        if (curDesc.size() > 0 && curDesc.get(0).contains("enchantment.")) curDesc.clear();
+                        if (curHelp.size() > 0 && curHelp.get(0).contains("enchantment.")) curHelp.clear();
+                    }
+
+                    if (!curLore.isEmpty()) {
+                        for (String loreLine : curLore) {
+                            if (lineY + 10 > descTop + DESC_H) break;
+                            this.font.drawString(matrixStack, "\u00A7o" + loreLine, left + DESC_X, lineY, 0xAA88AA);
+                            lineY += 10;
+                        }
+                        lineY += 4;
+                    }
+
+                    int scroll = (displayEnch == getSelectedEnchantment()) ? descScrollOffset : 0;
+                    for (int i = scroll; i < curDesc.size(); i++) {
                         if (lineY + 10 > descTop + DESC_H) break;
-                        this.font.drawString(matrixStack, wrappedDescLines.get(i), left + DESC_X, lineY, 0xA0A0A0);
+                        this.font.drawString(matrixStack, curDesc.get(i), left + DESC_X, lineY, 0xA0A0A0);
                         lineY += 10;
                     }
 
                     // Help text
-                    if (!wrappedHelpLines.isEmpty()) {
+                    if (!curHelp.isEmpty()) {
                         lineY += 4;
-                        for (String helpLine : wrappedHelpLines) {
+                        for (String helpLine : curHelp) {
                             if (lineY + 10 > descTop + DESC_H) break;
                             this.font.drawString(matrixStack, helpLine, left + DESC_X, lineY, 0xFFAA00);
                             lineY += 10;
@@ -267,14 +297,14 @@ public class EnchanterScreen extends ContainerScreen<EnchanterContainer> {
         int left = this.guiLeft;
         int top = this.guiTop;
 
-        fill(matrixStack, left, top, left + UI_WIDTH, top + UI_HEIGHT, 0xFF2D2D2D);
-        fill(matrixStack, left + 1, top + 1, left + UI_WIDTH - 1, top + UI_HEIGHT - 1, 0xFF1A1A1A);
+        fillGradient(matrixStack, left, top, left + UI_WIDTH, top + UI_HEIGHT, 0xFF353540, 0xFF151520);
+        fillGradient(matrixStack, left + 1, top + 1, left + UI_WIDTH - 1, top + UI_HEIGHT - 1, 0xFF202025, 0xFF101015);
 
-        fill(matrixStack, left + LIST_X - 2, top + LIST_Y - 2,
-                left + LIST_X + LIST_W + 2, top + LIST_Y + MAX_VISIBLE * ENTRY_H + 2, 0xCC000000);
+        fillGradient(matrixStack, left + LIST_X - 2, top + LIST_Y - 2,
+                left + LIST_X + LIST_W + 2, top + LIST_Y + MAX_VISIBLE * ENTRY_H + 2, 0xCC151520, 0xCC050510);
 
-        fill(matrixStack, left + DESC_X - 2, top + LIST_Y - 2,
-                left + DESC_X + DESC_W + 10, top + LIST_Y + DESC_H + 2, 0x40000000);
+        fillGradient(matrixStack, left + DESC_X - 2, top + LIST_Y - 2,
+                left + DESC_X + DESC_W + 10, top + LIST_Y + DESC_H + 2, 0x99251525, 0x99050510);
     }
 
     @Override
@@ -374,13 +404,13 @@ public class EnchanterScreen extends ContainerScreen<EnchanterContainer> {
     private List<String> wrapText(String text, int maxWidth) {
         List<String> lines = new ArrayList<>();
         StringBuilder line = new StringBuilder();
-        String currentColor = "\u00A77";
+        String currentFormat = "";
         for (String word : text.split(" ")) {
             String test = line.length() == 0 ? word : line + " " + word;
             if (this.font.getStringWidth(test) > maxWidth && line.length() > 0) {
                 lines.add(line.toString());
-                currentColor = extractCurrentColor(line.toString());
-                line = new StringBuilder(currentColor + word);
+                currentFormat = extractAllFormatting(line.toString());
+                line = new StringBuilder(currentFormat + word);
             } else {
                 line = new StringBuilder(test);
             }
@@ -391,11 +421,34 @@ public class EnchanterScreen extends ContainerScreen<EnchanterContainer> {
         return lines;
     }
 
-    private String extractCurrentColor(String text) {
-        String[] parts = text.split("\u00A7");
-        if (parts.length > 1) {
-            return "\u00A7" + parts[parts.length - 1].charAt(0);
+    private String extractAllFormatting(String text) {
+        StringBuilder fmt = new StringBuilder();
+        String lastColor = "";
+        boolean bold = false, italic = false, underline = false, strike = false, obf = false;
+        for (int i = 0; i < text.length() - 1; i++) {
+            if (text.charAt(i) == '\u00A7') {
+                char code = text.charAt(i + 1);
+                if ("0123456789abcdef".indexOf(code) >= 0) {
+                    lastColor = "\u00A7" + code;
+                    bold = false; italic = false; underline = false; strike = false; obf = false;
+                } else if (code == 'l') bold = true;
+                else if (code == 'o') italic = true;
+                else if (code == 'n') underline = true;
+                else if (code == 'm') strike = true;
+                else if (code == 'k') obf = true;
+                else if (code == 'r') {
+                    lastColor = "";
+                    bold = false; italic = false; underline = false; strike = false; obf = false;
+                }
+                i++;
+            }
         }
-        return "\u00A77";
+        fmt.append(lastColor);
+        if (bold) fmt.append("\u00A7l");
+        if (italic) fmt.append("\u00A7o");
+        if (underline) fmt.append("\u00A7n");
+        if (strike) fmt.append("\u00A7m");
+        if (obf) fmt.append("\u00A7k");
+        return fmt.toString();
     }
 }

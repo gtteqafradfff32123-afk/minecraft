@@ -76,6 +76,8 @@ public class ModEnchantments {
     public static final RegistryObject<Enchantment> LIMINAL_SLIP = ENCHANTMENTS.register("liminal_slip", LiminalSlipEnchantment::new);
     public static final RegistryObject<Enchantment> MEMBRANE_WEAVER = ENCHANTMENTS.register("membrane_weaver", MembraneWeaverEnchantment::new);
     public static final RegistryObject<Enchantment> TRUTH_DISSOLVER = ENCHANTMENTS.register("truth_dissolver", TruthDissolverEnchantment::new);
+    public static final RegistryObject<Enchantment> UNSTABLE_EDGE =
+            ENCHANTMENTS.register("unstable_edge", UnstableEdgeEnchantment::new);
 
     private static RegistryObject<Enchantment> register(String name, EnchantmentType type, int maxLevel, Rarity rarity) {
         return ENCHANTMENTS.register(name, () -> new TitanEnchantment(rarity, type, maxLevel));

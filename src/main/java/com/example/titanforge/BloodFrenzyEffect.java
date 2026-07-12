@@ -22,17 +22,17 @@ public class BloodFrenzyEffect extends Effect {
     public void performEffect(LivingEntity entity, int amplifier) {
         if (entity.world.isRemote) return;
 
-        if (entity instanceof PlayerEntity && entity.ticksExisted % 80 == 0) {
-            PlayerEntity player = (PlayerEntity) entity;
-            player.world.playSound(null, player.getPosX(), player.getPosY(), player.getPosZ(),
-                    ModSounds.BLOOD_FRENZY_BREATH.get(), SoundCategory.PLAYERS, 1.0F, 1.0F);
+        if (entity instanceof net.minecraft.entity.player.ServerPlayerEntity
+                && entity.ticksExisted % 80 == 0) {
+            NetworkHandler.sendTo((net.minecraft.entity.player.ServerPlayerEntity) entity,
+                    new PlayOneShotSoundPacket("blood_frenzy_breath"));
         }
 
-        int speed = amplifier == 0 ? 1 : 2;
+        int speed = amplifier == 0 ? 0 : 1;
         entity.addPotionEffect(new EffectInstance(Effects.SPEED, 25, speed, false, false));
 
         if (amplifier >= 1) {
-            entity.addPotionEffect(new EffectInstance(Effects.RESISTANCE, 25, amplifier, false, false));
+            entity.addPotionEffect(new EffectInstance(Effects.RESISTANCE, 25, amplifier - 1, false, false));
         }
 
         if (entity.getActivePotionEffect(Effects.ABSORPTION) == null) {

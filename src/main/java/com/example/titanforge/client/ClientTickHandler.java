@@ -1,5 +1,7 @@
 package com.example.titanforge.client;
 
+import com.example.titanforge.TitanForge;
+
 import com.example.titanforge.NetworkHandler;
 import com.example.titanforge.OpenGuiPacket;
 import net.minecraftforge.api.distmarker.Dist;
@@ -20,7 +22,7 @@ public class ClientTickHandler {
             try {
                 NetworkHandler.INSTANCE.sendToServer(new OpenGuiPacket());
             } catch (Exception e) {
-                System.out.println("[TitanForge] Keybind sendToServer failed: " + e);
+                TitanForge.LOGGER.error("[TitanForge] Keybind sendToServer failed", e);
             }
         }
     }

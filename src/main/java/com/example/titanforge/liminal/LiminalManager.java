@@ -4,7 +4,6 @@ import com.google.common.collect.ImmutableMap;
 import com.example.titanforge.TitanForge;
 import com.example.titanforge.entities.PlayerCopyEntity;
 import com.example.titanforge.entities.ShadowEntity;
-import com.example.titanforge.entities.StunZombieEntity;
 import com.example.titanforge.liminal.ai.LiminalDialogue;
 import com.example.titanforge.liminal.chat.LiminalChatAI;
 import com.example.titanforge.liminal.copy.ChunkCopyManager;
@@ -17,10 +16,9 @@ import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.monster.SkeletonEntity;
 import net.minecraft.entity.monster.ZombieEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.ItemStack;
@@ -28,7 +26,6 @@ import net.minecraft.item.Items;
 import net.minecraft.particles.ParticleTypes;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.potion.Effects;
-import net.minecraft.tags.BlockTags;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.SoundCategory;
@@ -66,7 +63,6 @@ public class LiminalManager {
         public int copiesKilled = 0;
         public int activeCopies = 0;
         public boolean cloneReady = false;
-        public boolean markDeadOnRejoin = false;
         public boolean shadowSpawned = false;
         public boolean frozen = false;
         public boolean secondHalfAnomalies = false;
@@ -74,6 +70,9 @@ public class LiminalManager {
         public boolean shadowAwakened = false;
         public boolean firstHit = false;
         public boolean musicStarted = false;
+        public UUID sessionId;
+        public BlockPos sourceCenter;
+        public boolean cleanupQueued;
         public int shadowBehavior = SHADOW_BEHAVIOR_STALK;
         public int shadowAnger = 0;
         public int shadowRespawnTimer = 0;
@@ -115,58 +114,103 @@ public class LiminalManager {
             enterMob(victim, (ServerWorld) victim.world);
             return;
         }
-        ServerPlayerEntity vp = (ServerPlayerEntity) victim;
-        ServerWorld overworld = (ServerWorld) vp.world;
-        ServerWorld clone = LiminalDimension.get(vp.getServer());
-        if (clone == null) {
-            vp.sendStatusMessage(new StringTextComponent("\u00A7c\u041B\u0438\u043C\u0438\u043D\u0430\u043B\u044C\u043D\u043E\u0435 \u0438\u0437\u043C\u0435\u0440\u0435\u043D\u0438\u0435 \u043D\u0435 \u0437\u0430\u0433\u0440\u0443\u0436\u0435\u043D\u043E (\u043D\u0443\u0436\u0435\u043D \u043D\u043E\u0432\u044B\u0439 \u043C\u0438\u0440)"), true);
+
+        ServerPlayerEntity player = (ServerPlayerEntity) victim;
+        ServerWorld source = (ServerWorld) player.world;
+        ServerWorld liminal = LiminalDimension.get(player.getServer());
+        if (liminal == null) {
+            player.sendStatusMessage(new StringTextComponent("\u00A7c\u041B\u0438\u043C\u0438\u043D\u0430\u043B\u044C\u043D\u043E\u0435 \u0438\u0437\u043C\u0435\u0440\u0435\u043D\u0438\u0435 \u043D\u0435 \u0437\u0430\u0433\u0440\u0443\u0436\u0435\u043D\u043E (\u043D\u0443\u0436\u0435\u043D \u043D\u043E\u0432\u044B\u0439 \u043C\u0438\u0440)"), true);
             return;
         }
 
-        State st = new State();
-        st.victim = vp.getUniqueID();
-        st.center = vp.getPosition();
-        st.realReturnPos = vp.getPosition();
-        st.durationTicks = DURATION_TICKS;
-        st.frozen = true;
-        STATES.put(st.victim, st);
+        UUID playerId = player.getUniqueID();
+        if (LiminalArenaCleaner.isCleaning(playerId)) {
+            player.sendStatusMessage(new StringTextComponent(
+                    "\u00A7e\u041B\u0438\u043C\u0438\u043D\u0430\u043B \u0435\u0449\u0451 \u043E\u0447\u0438\u0449\u0430\u0435\u0442\u0441\u044F. \u041F\u043E\u043F\u0440\u043E\u0431\u0443\u0439 \u0447\u0435\u0440\u0435\u0437 \u043D\u0435\u0441\u043A\u043E\u043B\u044C\u043A\u043E \u0441\u0435\u043A\u0443\u043D\u0434."), true);
+            return;
+        }
 
-        TitanForge.LOGGER.info("[liminal] enter: player={} center={} realReturn={}",
-            vp.getName().getString(), st.center, st.realReturnPos);
+        State previous = STATES.remove(playerId);
+        if (previous != null) {
+            cleanupRuntimeState(liminal, previous);
+        }
+        ChunkCopyManager.cancelFor(playerId);
 
-        applyLiminalHit(vp);
+        State state = new State();
+        state.sessionId = UUID.randomUUID();
+        state.victim = playerId;
+        state.sourceCenter = player.getPosition().toImmutable();
+        state.center = LiminalArenaSlots.center(playerId);
+        state.realReturnPos = player.getPosition().toImmutable();
+        state.durationTicks = DURATION_TICKS;
+        state.frozen = true;
+        STATES.put(playerId, state);
 
-        LimboHandler.enterLimbo(vp);
-        CopyJob job = new CopyJob(st.victim, overworld, clone, st.center, RADIUS);
-        ChunkCopyManager.enqueue(job);
+        TitanForge.LOGGER.info("[liminal] enter: player={} arenaCenter={} sourceCenter={} realReturn={}",
+            player.getName().getString(), state.center, state.sourceCenter, state.realReturnPos);
+
+        applyLiminalHit(player);
+        LimboHandler.enterLimbo(player);
+
+        UUID expectedSession = state.sessionId;
+        LiminalArenaCleaner.start(liminal, playerId,
+                state.center, RADIUS + 4, () -> {
+            State current = STATES.get(playerId);
+            ServerPlayerEntity online = player.getServer()
+                    .getPlayerList().getPlayerByUUID(playerId);
+
+            if (current == null
+                    || !expectedSession.equals(current.sessionId)
+                    || online == null
+                    || !online.isAlive()) {
+                return;
+            }
+
+            CopyJob job = new CopyJob(playerId,
+                    source, liminal,
+                    current.sourceCenter,
+                    current.center,
+                    RADIUS);
+            ChunkCopyManager.enqueue(job);
+        });
     }
 
     public static void onCloneReady(CopyJob job) {
-        ServerPlayerEntity vp = job.target.getServer().getPlayerList().getPlayerByUUID(job.victim);
-        if (vp == null) return;
+        ServerPlayerEntity player = job.target.getServer().getPlayerList().getPlayerByUUID(job.victim);
+        if (player == null) return;
         State st = STATES.get(job.victim);
         if (st == null) return;
 
+        BlockPos center = job.targetCenter;
+
         ChunkPos targetCp = new ChunkPos(st.center);
-        job.target.getChunkProvider().registerTicket(TicketType.POST_TELEPORT, targetCp, 1, vp.getEntityId());
+        job.target.getChunkProvider().registerTicket(TicketType.POST_TELEPORT, targetCp, 1, player.getEntityId());
         job.target.getChunkProvider().forceChunk(targetCp, true);
+        TitanForge.LOGGER.info("[liminal] forced chunk ticket for player={} at {}", player.getName().getString(), targetCp);
 
-        TitanForge.LOGGER.info("[liminal] teleporting player={} to {} (center={}) in clone world, building wall at same center",
-            vp.getName().getString(), st.center, st.center);
+        TitanForge.LOGGER.info("[liminal] teleporting player={} to arena center {}",
+            player.getName().getString(), center);
 
-        vp.teleport(job.target, st.center.getX() + 0.5, st.center.getY(), st.center.getZ() + 0.5, vp.rotationYaw, vp.rotationPitch);
-        LimboHandler.exitLimbo(vp);
+        DeltaCopier.buildFloor(job.target, center, RADIUS);
+        buildVoidWall(job.target, center, RADIUS);
+        removeBedrock(job.target, center, RADIUS);
+
+        player.teleport(job.target,
+                center.getX() + 0.5D,
+                center.getY(),
+                center.getZ() + 0.5D,
+                player.rotationYaw,
+                player.rotationPitch);
+
+        LimboHandler.exitLimbo(player);
         st.cloneReady = true;
         st.frozen = false;
-        vp.setGameType(net.minecraft.world.GameType.SURVIVAL);
-        vp.removePotionEffect(Effects.JUMP_BOOST);
-        vp.removePotionEffect(Effects.BLINDNESS);
-        vp.removePotionEffect(Effects.SLOWNESS);
+        player.setGameType(net.minecraft.world.GameType.SURVIVAL);
+        player.removePotionEffect(Effects.JUMP_BOOST);
+        player.removePotionEffect(Effects.BLINDNESS);
+        player.removePotionEffect(Effects.SLOWNESS);
 
-        DeltaCopier.buildFloor(job.target, st.center, RADIUS);
-        buildVoidWall(job.target, st.center, RADIUS);
-        removeBedrock(job.target, st.center, RADIUS);
-        st.shadowSpawned = spawnShadow(job.target, st, vp);
+        st.shadowSpawned = spawnShadow(job.target, st, player);
     }
 
     public static void buildVoidWall(ServerWorld world, BlockPos center, int radius) {
@@ -210,6 +254,33 @@ public class LiminalManager {
         }
     }
 
+    private static void spawnWallAmbient(ServerWorld world, State state) {
+        Random r = world.rand;
+        int angleStep = r.nextInt(360);
+        int wallRadius = RADIUS + 1;
+        double rad = Math.toRadians(angleStep);
+        double wx = state.center.getX() + Math.cos(rad) * wallRadius;
+        double wz = state.center.getZ() + Math.sin(rad) * wallRadius;
+        double wy = 10 + r.nextInt(180);
+
+        net.minecraft.particles.IParticleData[] dark = {
+            ParticleTypes.SMOKE,
+            ParticleTypes.LARGE_SMOKE,
+            ParticleTypes.SOUL_FIRE_FLAME
+        };
+        net.minecraft.particles.IParticleData p = dark[r.nextInt(dark.length)];
+        world.spawnParticle(p, wx + 0.5, wy, wz + 0.5, 1, 0.3, 0.3, 0.3, 0.01);
+
+        if (r.nextInt(3) == 0) {
+            rad = Math.toRadians((angleStep + 120 + r.nextInt(120)) % 360);
+            wx = state.center.getX() + Math.cos(rad) * wallRadius;
+            wz = state.center.getZ() + Math.sin(rad) * wallRadius;
+            wy = 10 + r.nextInt(180);
+            p = dark[r.nextInt(dark.length)];
+            world.spawnParticle(p, wx + 0.5, wy, wz + 0.5, 1, 0.3, 0.3, 0.3, 0.01);
+        }
+    }
+
     private static void setWallColumn(ServerWorld clone, int bx, int bz, BlockState state, int minY, int maxY) {
         for (int y = minY; y <= maxY; y++) {
             clone.setBlockState(new BlockPos(bx, y, bz), state, 2);
@@ -239,41 +310,47 @@ public class LiminalManager {
         while (it.hasNext()) {
             State st = it.next().getValue();
             if (!st.cloneReady) continue;
-            ServerPlayerEntity vp = clone.getServer().getPlayerList().getPlayerByUUID(st.victim);
-            if (vp == null || !vp.isAlive()) {
-                cleanupState(vp, st);
+            ServerPlayerEntity player = clone.getServer().getPlayerList().getPlayerByUUID(st.victim);
+            if (player == null || !player.isAlive()) {
                 it.remove();
+                queueArenaCleanup(clone, st);
                 continue;
             }
-            if (vp.isCreative() || vp.isSpectator())
-                vp.setGameType(net.minecraft.world.GameType.SURVIVAL);
+            if (player.world != clone) {
+                it.remove();
+                queueArenaCleanup(clone, st);
+                clearLockEffects(player);
+                continue;
+            }
+            if (player.isCreative() || player.isSpectator())
+                player.setGameType(net.minecraft.world.GameType.SURVIVAL);
             st.ambientTimer++;
 
-            LiminalAnomalyManager.tick(clone, vp, st);
+            LiminalAnomalyManager.tick(clone, player, st);
 
             // Unfreeze after 3 seconds (60 ticks)
             if (st.frozen && st.ambientTimer >= UNFREEZE_TICKS) {
                 st.frozen = false;
-                vp.removePotionEffect(Effects.SLOWNESS);
-                vp.removePotionEffect(Effects.BLINDNESS);
-                sendCopyMessage(vp, "\u0414\u043E\u0431\u0440\u043E \u043F\u043E\u0436\u0430\u043B\u043E\u0432\u0430\u0442\u044C \u0432 \u0442\u0432\u043E\u044E \u043B\u0438\u0447\u043D\u0443\u044E \u0431\u0435\u0437\u0434\u043D\u0443.");
+                player.removePotionEffect(Effects.SLOWNESS);
+                player.removePotionEffect(Effects.BLINDNESS);
+                sendCopyMessage(player, "\u0414\u043E\u0431\u0440\u043E \u043F\u043E\u0436\u0430\u043B\u043E\u0432\u0430\u0442\u044C \u0432 \u0442\u0432\u043E\u044E \u043B\u0438\u0447\u043D\u0443\u044E \u0431\u0435\u0437\u0434\u043D\u0443.");
             }
 
             // Wall proximity effects — always active
-            double dist = Math.sqrt(vp.getDistanceSq(st.center.getX() + 0.5, vp.getPosY(), st.center.getZ() + 0.5));
+            double dist = Math.sqrt(player.getDistanceSq(st.center.getX() + 0.5, player.getPosY(), st.center.getZ() + 0.5));
             if (dist > 90) {
-                vp.addPotionEffect(new EffectInstance(Effects.BLINDNESS, 40, 0, false, false));
-                vp.addPotionEffect(new EffectInstance(Effects.NAUSEA, 60, 0, false, false));
+                player.addPotionEffect(new EffectInstance(Effects.BLINDNESS, 40, 0, false, false));
+                player.addPotionEffect(new EffectInstance(Effects.NAUSEA, 60, 0, false, false));
                 clone.spawnParticle(net.minecraft.particles.ParticleTypes.SMOKE,
-                    vp.getPosX(), vp.getPosY() + 1, vp.getPosZ(), 20, 0.5, 0.8, 0.5, 0.01);
+                    player.getPosX(), player.getPosY() + 1, player.getPosZ(), 20, 0.5, 0.8, 0.5, 0.01);
                 clone.spawnParticle(net.minecraft.particles.ParticleTypes.LARGE_SMOKE,
-                    vp.getPosX(), vp.getPosY() + 1, vp.getPosZ(), 8, 0.6, 0.9, 0.6, 0.02);
+                    player.getPosX(), player.getPosY() + 1, player.getPosZ(), 8, 0.6, 0.9, 0.6, 0.02);
             }
 
             // Ambient AI messages from shadow every ~25 seconds
             if (st.shadowSpawned && st.ambientTimer % (25 * 20) == 0) {
                 if (clone.getEntityByUuid(st.shadowId) instanceof ShadowEntity) {
-                    LiminalChatAI.copySpeaks(vp, "\u043F\u0440\u043E\u0448\u043B\u043E \u0432\u0440\u0435\u043C\u044F, \u0441\u043A\u0430\u0436\u0438 \u0447\u0442\u043E-\u0442\u043E \u0436\u0443\u0442\u043A\u043E\u0435 \u043F\u0440\u043E \u044D\u0442\u043E \u043C\u0435\u0441\u0442\u043E \u0438\u043B\u0438 \u0438\u0433\u0440\u043E\u043A\u0430");
+                    LiminalChatAI.copySpeaks(player, "\u043F\u0440\u043E\u0448\u043B\u043E \u0432\u0440\u0435\u043C\u044F, \u0441\u043A\u0430\u0436\u0438 \u0447\u0442\u043E-\u0442\u043E \u0436\u0443\u0442\u043A\u043E\u0435 \u043F\u0440\u043E \u044D\u0442\u043E \u043C\u0435\u0441\u0442\u043E \u0438\u043B\u0438 \u0438\u0433\u0440\u043E\u043A\u0430");
                 }
             }
 
@@ -281,9 +358,9 @@ public class LiminalManager {
             if (st.ambientTimer % 10 == 0) {
                 Random r = clone.rand;
                 for (int i = 0; i < 12; i++) {
-                    double px = vp.getPosX() + (r.nextDouble() - 0.5) * 40;
-                    double py = vp.getPosY() + r.nextDouble() * 15;
-                    double pz = vp.getPosZ() + (r.nextDouble() - 0.5) * 40;
+                    double px = player.getPosX() + (r.nextDouble() - 0.5) * 40;
+                    double py = player.getPosY() + r.nextDouble() * 15;
+                    double pz = player.getPosZ() + (r.nextDouble() - 0.5) * 40;
                     clone.spawnParticle(ParticleTypes.WHITE_ASH, px, py, pz, 1, 0, 0, 0, 0);
                 }
             }
@@ -295,8 +372,11 @@ public class LiminalManager {
                     SoundEvents.ENTITY_ENDERMAN_STARE,
                     SoundEvents.ENTITY_WITHER_AMBIENT
                 };
-                vp.playSound(creepy[clone.rand.nextInt(creepy.length)], 0.4F, 0.3F + clone.rand.nextFloat() * 0.3F);
+                player.playSound(creepy[clone.rand.nextInt(creepy.length)], 0.4F, 0.3F + clone.rand.nextFloat() * 0.3F);
             }
+
+            // Wall ambient effects — dark particles around the wall ring
+            spawnWallAmbient(clone, st);
 
             // Everything below this point requires first hit
             if (!st.firstHit) continue;
@@ -304,26 +384,26 @@ public class LiminalManager {
             st.ticks++;
 
             // Withering effect — only after 2 minutes
-            if (st.ticks >= 2400 && st.ticks % 60 == 0 && vp.getHealth() > 1f)
-                vp.attackEntityFrom(net.minecraft.util.DamageSource.WITHER, 1f);
+            if (st.ticks >= 2400 && st.ticks % 60 == 0 && player.getHealth() > 1f)
+                player.attackEntityFrom(net.minecraft.util.DamageSource.WITHER, 1f);
 
             // Slowness based on kill count
             if (st.copiesKilled >= 4 && st.ticks % (10 * 20) == 0) {
                 int amplifier = st.copiesKilled >= 5 ? 2 : 0;
                 int duration = st.copiesKilled >= 5 ? 6 * 20 : 4 * 20;
-                vp.addPotionEffect(new EffectInstance(Effects.SLOWNESS, duration, amplifier, false, false));
+                player.addPotionEffect(new EffectInstance(Effects.SLOWNESS, duration, amplifier, false, false));
             }
 
             // Shadow respawn after being killed
             if (!st.shadowSpawned && st.shadowRespawnTimer > 0 && st.copiesKilled < KILLS_TO_ESCAPE) {
                 st.shadowRespawnTimer--;
                 if (st.shadowRespawnTimer == 0) {
-                    st.shadowSpawned = spawnShadow(clone, st, vp);
+                    st.shadowSpawned = spawnShadow(clone, st, player);
                     if (st.shadowSpawned && st.shadowAwakened) {
                         ShadowEntity se = (ShadowEntity) clone.getEntityByUuid(st.shadowId);
                         if (se != null) {
                             se.setAggressive(true);
-                            LiminalManager.sendCopyMessage(vp, "\u0422\u044B \u0434\u0443\u043C\u0430\u043B, \u044D\u0442\u043E \u043A\u043E\u043D\u0435\u0446? \u041C\u044B \u0442\u043E\u043B\u044C\u043A\u043E \u043D\u0430\u0447\u0438\u043D\u0430\u0435\u043C.");
+                            LiminalManager.sendCopyMessage(player, "\u0422\u044B \u0434\u0443\u043C\u0430\u043B, \u044D\u0442\u043E \u043A\u043E\u043D\u0435\u0446? \u041C\u044B \u0442\u043E\u043B\u044C\u043A\u043E \u043D\u0430\u0447\u0438\u043D\u0430\u0435\u043C.");
                         }
                     }
                 }
@@ -363,7 +443,7 @@ public class LiminalManager {
             }
 
             // Director-based copy spawning
-            LiminalDirector.tick(clone, vp, st);
+            LiminalDirector.tick(clone, player, st);
 
             // Wall self-repair every 10 seconds
             if (st.ticks % 200 == 0) {
@@ -373,7 +453,7 @@ public class LiminalManager {
             // Second half (after 3 minutes = 3600 ticks)
             if (!st.secondHalfAnomalies && st.ticks >= 3600) {
                 st.secondHalfAnomalies = true;
-                sendCopyMessage(vp, "\u041C\u0438\u0440 \u0440\u0443\u0448\u0438\u0442\u0441\u044F...");
+                sendCopyMessage(player, "\u041C\u0438\u0440 \u0440\u0443\u0448\u0438\u0442\u0441\u044F...");
             }
 
             // World destruction — every 3 seconds after first 10 seconds
@@ -384,25 +464,52 @@ public class LiminalManager {
             // Atmosphere: heartbeat when time is low
             int minutesLeft = Math.max(0, (st.durationTicks - st.ticks) / (60 * 20));
             if (minutesLeft <= 1 && st.ticks % 40 == 0) {
-                vp.playSound(SoundEvents.ENTITY_WITHER_AMBIENT, 1.0F, 0.5F);
+                player.playSound(SoundEvents.ENTITY_WITHER_AMBIENT, 1.0F, 0.5F);
             }
 
             // Trigger rage music when shadow becomes aggressive
             if (st.shadowAggressive && !st.musicStarted) {
                 st.musicStarted = true;
-                sendRageMusicPacket(vp);
+                sendRageMusicPacket(player);
             }
 
             // Exit on 6 kills (no more auto-timeout)
             if (st.copiesKilled >= KILLS_TO_ESCAPE) {
-                ServerPlayerEntity finalVp = vp;
+                ServerPlayerEntity finalPlayer = player;
                 State finalSt = st;
-                vp.server.execute(() -> {
-                    exit(finalVp, finalSt, true);
+                player.server.execute(() -> {
+                    exit(finalPlayer, finalSt, true);
                 });
                 it.remove();
             }
         }
+
+        for (ServerPlayerEntity p : clone.getPlayers()) {
+            State state = STATES.get(p.getUniqueID());
+            if (state != null && state.cloneReady) continue;
+
+            ServerWorld overworld = clone.getServer().getWorld(net.minecraft.world.World.OVERWORLD);
+            if (overworld != null) {
+                BlockPos spawn = overworld.getSpawnPoint();
+                p.teleport(overworld,
+                        spawn.getX() + 0.5D,
+                        spawn.getY() + 1.0D,
+                        spawn.getZ() + 0.5D,
+                        p.rotationYaw,
+                        p.rotationPitch);
+                clearLockEffects(p);
+            }
+        }
+
+        if (STATES.isEmpty()) {
+            clearDimensionIfEmpty(clone);
+        }
+    }
+
+    public static void clearDimensionIfEmpty(ServerWorld clone) {
+        if (clone == null) return;
+        if (!clone.getPlayers().isEmpty()) return;
+        TitanForge.LOGGER.info("[liminal] dimension empty");
     }
 
     private static void worldCollapseTick(ServerWorld clone, State st) {
@@ -530,29 +637,36 @@ public class LiminalManager {
         }
     }
 
-    public static void spawnCopyNearShadow(ServerWorld w, ShadowEntity shadow) {
-        PlayerCopyEntity copy = com.example.titanforge.ModEntities.PLAYER_COPY.get().create(w);
-        if (copy == null) return;
-
+    public static void spawnCopyNearShadow(ServerWorld world, ShadowEntity shadow) {
         UUID ownerId = shadow.getOwnerId().orElse(null);
         if (ownerId == null) return;
-        State st = STATES.get(ownerId);
-        if (st == null) return;
 
-        ServerPlayerEntity owner = w.getServer().getPlayerList().getPlayerByUUID(ownerId);
-        if (owner == null) return;
+        State state = STATES.get(ownerId);
+        ServerPlayerEntity owner = world.getServer().getPlayerList().getPlayerByUUID(ownerId);
+        if (state == null || owner == null || state.activeCopies >= 6) return;
 
-        double[] pos = spawnPos(w.rand, st.center, owner);
-        copy.setLocationAndAngles(pos[0], st.center.getY() + 1, pos[1], 0f, 0f);
+        PlayerCopyEntity copy = com.example.titanforge.ModEntities.PLAYER_COPY.get().create(world);
+        if (copy == null) return;
+
+        double angle = world.rand.nextDouble() * Math.PI * 2.0D;
+        double distance = 4.0D + world.rand.nextDouble() * 4.0D;
+        copy.setLocationAndAngles(
+                shadow.getPosX() + Math.cos(angle) * distance,
+                shadow.getPosY(),
+                shadow.getPosZ() + Math.sin(angle) * distance,
+                owner.rotationYaw, owner.rotationPitch);
         copy.setOwner(ownerId);
+        copy.setHostile(true);
+        copy.copyEquipmentFrom(owner);
+        copy.setAttackTarget(owner);
 
-        boolean ok = w.addEntity(copy);
-        if (ok) {
-            st.activeCopies++;
-            st.copyIds.add(copy.getUniqueID());
-            st.spawnTicks.put(copy.getUniqueID(), st.ticks);
-            w.spawnParticle(ParticleTypes.SMOKE,
-                pos[0], st.center.getY() + 1, pos[1], 15, 0.3, 0.5, 0.3, 0.02);
+        if (world.addEntity(copy)) {
+            state.activeCopies++;
+            state.copyIds.add(copy.getUniqueID());
+            state.spawnTicks.put(copy.getUniqueID(), state.ticks);
+            world.spawnParticle(net.minecraft.particles.ParticleTypes.SOUL_FIRE_FLAME,
+                    copy.getPosX(), copy.getPosY() + 1.0D, copy.getPosZ(),
+                    24, 0.35D, 0.7D, 0.35D, 0.03D);
         }
     }
 
@@ -762,85 +876,94 @@ public class LiminalManager {
         );
     }
 
-    private static void cleanupState(ServerPlayerEntity vp, State st) {
-        if (vp != null && vp.isAlive()) {
-            ServerWorld overworld = vp.getServer().getWorld(net.minecraft.world.World.OVERWORLD);
-            if (overworld != null && vp.world.getDimensionKey() != net.minecraft.world.World.OVERWORLD)
-                vp.teleport(overworld, st.realReturnPos.getX()+0.5, st.realReturnPos.getY(), st.realReturnPos.getZ()+0.5, vp.rotationYaw, vp.rotationPitch);
-            vp.setGameType(net.minecraft.world.GameType.SURVIVAL);
-            vp.removePotionEffect(Effects.BLINDNESS);
-            vp.removePotionEffect(Effects.SLOWNESS);
-            vp.removePotionEffect(Effects.JUMP_BOOST);
-        }
-        LiminalAnomalyManager.clear(
-                vp == null ? null : (ServerWorld) vp.world,
-                st.victim);
-        removeAllCopies(vp, st);
+    private static void releaseChunkTicket(ServerWorld clone, State st) {
+        if (clone == null || st == null || st.center == null) return;
+        ChunkPos cp = new ChunkPos(st.center);
+        clone.getChunkProvider().releaseTicket(TicketType.POST_TELEPORT, cp, 1, st.victim.hashCode());
+        clone.getChunkProvider().forceChunk(cp, false);
+        TitanForge.LOGGER.info("[liminal] released chunk ticket for {} at {}", st.victim, cp);
     }
 
-    private static void removeAllCopies(ServerPlayerEntity vp, State st) {
-        if (vp == null) return;
-        ServerWorld w = (ServerWorld) vp.world;
-        for (UUID id : st.copyIds) {
-            Entity e = w.getEntityByUuid(id);
-            if (e != null) e.remove();
+    private static void cleanupRuntimeState(ServerWorld world, State state) {
+        if (world == null || state == null) return;
+
+        LiminalAnomalyManager.clear(world, state.victim);
+        LiminalDialogue.clear(state.victim);
+
+        AxisAlignedBB box = new AxisAlignedBB(
+                state.center.getX() - RADIUS - 8,
+                0,
+                state.center.getZ() - RADIUS - 8,
+                state.center.getX() + RADIUS + 9,
+                256,
+                state.center.getZ() + RADIUS + 9);
+
+        for (Entity entity : world.getEntitiesWithinAABB(
+                Entity.class, box,
+                entity -> !(entity instanceof PlayerEntity))) {
+            entity.remove();
         }
-        st.copyIds.clear();
-        st.spawnTicks.clear();
-        st.activeCopies = 0;
+
+        state.copyIds.clear();
+        state.spawnTicks.clear();
+        state.activeCopies = 0;
+        state.shadowId = null;
+        state.shadowSpawned = false;
     }
 
-    private static void exit(ServerPlayerEntity vp, State st, boolean early) {
-        ServerWorld clone = LiminalDimension.get(vp.getServer());
-        if (clone != null) {
-            wipeCloneArea(clone, st.center, RADIUS);
-            for (Entity e : clone.getEntitiesWithinAABB(Entity.class,
-                    new AxisAlignedBB(st.center).grow(RADIUS + 10))) {
-                if (e instanceof PlayerCopyEntity || e instanceof ShadowEntity
-                    || e instanceof ItemEntity
-                    || (e instanceof MobEntity && !(e instanceof net.minecraft.entity.player.PlayerEntity)))
-                    e.remove();
-            }
-        }
+    private static void queueArenaCleanup(ServerWorld liminal, State state) {
+        if (state == null || state.cleanupQueued) return;
+        state.cleanupQueued = true;
 
-        ServerWorld overworld = vp.getServer().getWorld(net.minecraft.world.World.OVERWORLD);
-        vp.teleport(overworld, st.realReturnPos.getX()+0.5, st.realReturnPos.getY(), st.realReturnPos.getZ()+0.5, vp.rotationYaw, vp.rotationPitch);
-        vp.setGameType(net.minecraft.world.GameType.SURVIVAL);
-        vp.removePotionEffect(Effects.BLINDNESS);
-        vp.removePotionEffect(Effects.SLOWNESS);
-        vp.removePotionEffect(Effects.JUMP_BOOST);
+        cleanupRuntimeState(liminal, state);
+        releaseChunkTicket(liminal, state);
+        ChunkCopyManager.cancelFor(state.victim);
+
+        LiminalArenaCleaner.start(liminal,
+                state.victim,
+                state.center,
+                RADIUS + 4,
+                () -> TitanForge.LOGGER.info(
+                        "[liminal] arena cleaned for {}", state.victim));
+    }
+
+    private static void exit(ServerPlayerEntity player, State state, boolean early) {
+        ServerWorld overworld = player.getServer().getWorld(net.minecraft.world.World.OVERWORLD);
+        player.teleport(overworld, state.realReturnPos.getX() + 0.5, state.realReturnPos.getY(), state.realReturnPos.getZ() + 0.5, player.rotationYaw, player.rotationPitch);
+        player.setGameType(net.minecraft.world.GameType.SURVIVAL);
+        player.removePotionEffect(Effects.BLINDNESS);
+        player.removePotionEffect(Effects.SLOWNESS);
+        player.removePotionEffect(Effects.JUMP_BOOST);
 
         com.example.titanforge.NetworkHandler.INSTANCE.send(
-                net.minecraftforge.fml.network.PacketDistributor.PLAYER.with(() -> vp),
+                net.minecraftforge.fml.network.PacketDistributor.PLAYER.with(() -> player),
                 new com.example.titanforge.StopMusicPacket());
-        LiminalAnomalyManager.clear(clone, st.victim);
-        LiminalDialogue.clear(st.victim);
-        STATES.remove(st.victim);
 
-        if (early) vp.addPotionEffect(new EffectInstance(Effects.WITHER, 10 * 20, 0));
+        ServerWorld liminal = LiminalDimension.get(player.getServer());
+        if (liminal != null) queueArenaCleanup(liminal, state);
+        STATES.remove(player.getUniqueID());
+
+        if (early) player.addPotionEffect(new EffectInstance(Effects.WITHER, 10 * 20, 0));
     }
 
-    public static void forceExit(ServerPlayerEntity vp, boolean died) {
-        State st = STATES.get(vp.getUniqueID());
-        if (st == null) return;
-        st.cloneReady = false;
-        exit(vp, st, false);
-        if (died) vp.sendStatusMessage(new StringTextComponent("\u00A74\u0422\u044B \u043D\u0435 \u0432\u044B\u0431\u0440\u0430\u043B\u0441\u044F..."), false);
-    }
+    public static void forceExit(ServerPlayerEntity player, boolean died) {
+        State state = STATES.remove(player.getUniqueID());
+        if (state == null) return;
 
-    private static void wipeCloneArea(ServerWorld clone, BlockPos center, int radius) {
-        int r2 = radius * radius;
-        int minY = Math.max(0, center.getY() - 45);
-        int maxY = Math.min(255, center.getY() + 45);
-        for (int x = -radius; x <= radius; x++) {
-            for (int z = -radius; z <= radius; z++) {
-                if (x * x + z * z > r2) continue;
-                for (int y = minY; y <= maxY; y++) {
-                    clone.setBlockState(new BlockPos(center.getX() + x, y, center.getZ() + z),
-                        Blocks.AIR.getDefaultState(), 2);
-                }
-            }
-        }
+        ServerWorld liminal = LiminalDimension.get(player.getServer());
+        if (liminal != null) queueArenaCleanup(liminal, state);
+
+        BlockPos returnPos = state.realReturnPos;
+        player.server.execute(() -> {
+            ServerWorld overworld = player.getServer().getWorld(net.minecraft.world.World.OVERWORLD);
+            player.teleport(overworld, returnPos.getX() + 0.5, returnPos.getY(), returnPos.getZ() + 0.5, player.rotationYaw, player.rotationPitch);
+            clearLockEffects(player);
+            com.example.titanforge.NetworkHandler.INSTANCE.send(
+                    net.minecraftforge.fml.network.PacketDistributor.PLAYER.with(() -> player),
+                    new com.example.titanforge.StopMusicPacket());
+        });
+
+        if (died) player.sendStatusMessage(new StringTextComponent("\u00A74\u0422\u044B \u043D\u0435 \u0432\u044B\u0431\u0440\u0430\u043B\u0441\u044F..."), false);
     }
 
     public static void enterMob(LivingEntity victim, ServerWorld world) {
@@ -875,11 +998,22 @@ public class LiminalManager {
         }
     }
 
-    public static void onPlayerDeath(UUID id) {
-        State st = STATES.remove(id);
-        if (st == null) return;
-        st.frozen = false;
-        st.markDeadOnRejoin = false;
+    public static void onExternalDimensionExit(ServerPlayerEntity player) {
+        State state = STATES.remove(player.getUniqueID());
+        if (state == null) return;
+        ServerWorld liminal = LiminalDimension.get(player.getServer());
+        if (liminal != null) queueArenaCleanup(liminal, state);
+        clearLockEffects(player);
+    }
+
+    public static void onPlayerDeath(ServerPlayerEntity player) {
+        UUID id = player.getUniqueID();
+        State state = STATES.remove(id);
+        if (state == null) return;
+
+        ServerWorld liminal = LiminalDimension.get(player.getServer());
+        if (liminal != null) queueArenaCleanup(liminal, state);
+        clearLockEffects(player);
     }
 
     public static void clearLockEffects(ServerPlayerEntity vp) {
@@ -890,15 +1024,19 @@ public class LiminalManager {
             vp.setGameType(net.minecraft.world.GameType.SURVIVAL);
     }
 
-    public static void onLogout(UUID id) {
-        State st = STATES.get(id);
-        if (st != null && st.cloneReady) st.markDeadOnRejoin = true;
+    public static void onLogout(ServerPlayerEntity player) {
+        State state = STATES.remove(player.getUniqueID());
+        if (state == null) return;
+        ServerWorld liminal = LiminalDimension.get(player.getServer());
+        if (liminal != null) queueArenaCleanup(liminal, state);
     }
 
-    public static void onLogin(ServerPlayerEntity p) {
-        State st = STATES.get(p.getUniqueID());
-        if (st != null && st.markDeadOnRejoin)
-            p.attackEntityFrom(net.minecraft.util.DamageSource.OUT_OF_WORLD, Float.MAX_VALUE);
+    public static void onLogin(ServerPlayerEntity player) {
+        State state = STATES.remove(player.getUniqueID());
+        if (state == null) return;
+        ServerWorld liminal = LiminalDimension.get(player.getServer());
+        if (liminal != null) queueArenaCleanup(liminal, state);
+        clearLockEffects(player);
     }
 
     public static boolean isProtectedWall(ServerWorld world, BlockPos pos) {

@@ -34,12 +34,14 @@ public class ApplyEnchantPacket {
             ServerPlayerEntity player = ctx.get().getSender();
             if (player == null || !player.isCreative()) return;
 
+            if (!(player.openContainer instanceof EnchanterContainer)) return;
+
             ItemStack stack = player.openContainer.getSlot(0).getStack();
             if (stack.isEmpty()) return;
 
             Enchantment enchant = Registry.ENCHANTMENT.getOptional(msg.enchantId).orElse(null);
             if (enchant != null) {
-                int level = Math.min(msg.level, enchant.getMaxLevel());
+                int level = Math.max(1, Math.min(msg.level, enchant.getMaxLevel()));
                 ItemStack book = new ItemStack(Items.ENCHANTED_BOOK);
                 book.addEnchantment(enchant, level);
                 player.openContainer.getSlot(0).putStack(book);

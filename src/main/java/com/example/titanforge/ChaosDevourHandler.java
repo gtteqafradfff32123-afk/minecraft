@@ -136,9 +136,10 @@ public class ChaosDevourHandler {
                     processingCleave.add(playerId);
                     try {
                         float cleaveDmg = event.getAmount() * 0.5F;
+                        int cleaveCount = 0;
                         for (LivingEntity e : world.getEntitiesWithinAABB(LivingEntity.class, new AxisAlignedBB(target.getPosition()).grow(3.0))) {
                             if (e != target && e != player && !isOwnThrall(e, player)) {
-                                e.hurtResistantTime = 0;
+                                if (cleaveCount++ >= 3) break;
                                 e.attackEntityFrom(DamageSource.causePlayerDamage(player), cleaveDmg);
                                 ((ServerWorld) world).spawnParticle(ParticleTypes.DAMAGE_INDICATOR, e.getPosX(), e.getPosY() + 1.0, e.getPosZ(), 10, 0.3, 0.5, 0.3, 0.05);
                             }
@@ -180,8 +181,7 @@ public class ChaosDevourHandler {
                 }
             }
         } catch (Throwable t) {
-            System.out.println("[TitanForge-ChaosDevour-onLivingHurt] " + t.getClass().getName() + ": " + t.getMessage());
-            t.printStackTrace();
+            TitanForge.LOGGER.error("[TitanForge-ChaosDevour-onLivingHurt] Error in event", t);
         }
     }
 
@@ -224,8 +224,7 @@ public class ChaosDevourHandler {
                 }
             }
         } catch (Throwable t) {
-            System.out.println("[TitanForge-ChaosDevour-onLivingDeath] " + t.getClass().getName() + ": " + t.getMessage());
-            t.printStackTrace();
+            TitanForge.LOGGER.error("[TitanForge-ChaosDevour-onLivingDeath] Error in event", t);
         }
     }
 
@@ -310,8 +309,7 @@ public class ChaosDevourHandler {
                 }
             }
         } catch (Throwable t) {
-            System.out.println("[TitanForge-ChaosDevour-onWorldTick] " + t.getClass().getName() + ": " + t.getMessage());
-            t.printStackTrace();
+            TitanForge.LOGGER.error("[TitanForge-ChaosDevour-onWorldTick] Error in event", t);
         }
     }
 

@@ -9,8 +9,10 @@ import java.util.function.Supplier;
 public final class StopMusicPacket {
     public static void encode(StopMusicPacket msg, PacketBuffer buf) {}
     public static StopMusicPacket decode(PacketBuffer buf) { return new StopMusicPacket(); }
-    public static void handle(StopMusicPacket msg, Supplier<NetworkEvent.Context> ctx) {
-        ctx.get().enqueueWork(() -> Minecraft.getInstance().getSoundHandler().stop());
+    public static void handle(StopMusicPacket msg,
+                              java.util.function.Supplier<NetworkEvent.Context> ctx) {
+        ctx.get().enqueueWork(
+                com.example.titanforge.client.LiminalMusicController::stop);
         ctx.get().setPacketHandled(true);
     }
 }

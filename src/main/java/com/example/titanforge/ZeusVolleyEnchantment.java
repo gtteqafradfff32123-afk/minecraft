@@ -17,4 +17,14 @@ public class ZeusVolleyEnchantment extends Enchantment {
     public boolean canApply(net.minecraft.item.ItemStack stack) {
         return stack.getItem() instanceof BowItem;
     }
+
+    @Override
+    public boolean canGenerateInLoot() {
+        return false;
+    }
+
+    @Override
+    public boolean canVillagerTrade() {
+        return false;
+    }
 }

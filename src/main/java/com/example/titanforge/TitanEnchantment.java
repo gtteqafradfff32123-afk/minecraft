@@ -69,6 +69,16 @@ public class TitanEnchantment extends Enchantment {
 
     @Override
     public boolean isAllowedOnBooks() {
-        return true;
+        return false;
+    }
+
+    @Override
+    public boolean canGenerateInLoot() {
+        return false;
+    }
+
+    @Override
+    public boolean canVillagerTrade() {
+        return false;
     }
 }

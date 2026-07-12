@@ -1,6 +1,6 @@
 package com.example.titanforge;
 
-import com.example.titanforge.entities.BlindGolemEntity;
+import com.example.titanforge.entities.GraveglassColossusEntity;
 import com.example.titanforge.entities.PlagueDoctorEntity;
 import com.example.titanforge.entities.PlayerCopyEntity;
 import com.example.titanforge.entities.ShadowEntity;
@@ -18,11 +18,13 @@ public class ModEntities {
     public static final DeferredRegister<EntityType<?>> ENTITIES =
             DeferredRegister.create(ForgeRegistries.ENTITIES, TitanForge.MOD_ID);
 
-    public static final RegistryObject<EntityType<BlindGolemEntity>> BLIND_GOLEM =
-            ENTITIES.register("blind_golem", () -> EntityType.Builder
-                    .create(BlindGolemEntity::new, EntityClassification.MISC)
-                    .size(1.4F, 2.7F)
-                    .build("blind_golem"));
+    public static final RegistryObject<EntityType<GraveglassColossusEntity>> GRAVEGLASS_COLOSSUS =
+            ENTITIES.register("graveglass_colossus", () -> EntityType.Builder
+                    .create(GraveglassColossusEntity::new, EntityClassification.MONSTER)
+                    .size(1.15F, 3.15F)
+                    .trackingRange(10)
+                    .updateInterval(3)
+                    .build("graveglass_colossus"));
 
     public static final RegistryObject<EntityType<ShadowEntity>> SHADOW =
             ENTITIES.register("shadow", () -> EntityType.Builder
@@ -52,7 +54,7 @@ public class ModEntities {
 
     public static void onEntityAttributeCreation(EntityAttributeCreationEvent event) {
         event.put(PLAGUE_DOCTOR.get(), PlagueDoctorEntity.createAttributes().create());
-        event.put(BLIND_GOLEM.get(), BlindGolemEntity.registerAttributes().create());
+        event.put(GRAVEGLASS_COLOSSUS.get(), GraveglassColossusEntity.createAttributes().create());
         event.put(SHADOW.get(), ShadowEntity.registerAttributes().create());
         event.put(STUN_ZOMBIE.get(), ZombieEntity.func_234342_eQ_()
                 .createMutableAttribute(Attributes.MAX_HEALTH, 20.0D)

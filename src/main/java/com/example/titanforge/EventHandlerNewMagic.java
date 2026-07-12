@@ -74,7 +74,7 @@ public class EventHandlerNewMagic {
                             ((ServerWorld) world).spawnParticle(ParticleTypes.DAMAGE_INDICATOR, x, y, z, 1, 0.0, 0.0, 0.0, 0.0);
                         }
                     }
-                    player.heal(Math.min(totalHeal, healCap));
+                    player.heal(Math.min(totalHeal, healCap * 0.5F));
                     pData.putLong("BloodCooldown", world.getGameTime() + (700L - bloodLvl * 100L));
 
                     if (!world.isRemote) {
@@ -184,8 +184,7 @@ public class EventHandlerNewMagic {
             }
         }
     } catch (Throwable t) {
-        System.out.println("[TitanForge-NewMagic-onAttack] " + t.getClass().getName() + ": " + t.getMessage());
-        t.printStackTrace();
+        TitanForge.LOGGER.error("[TitanForge-NewMagic-onAttack] Error in event", t);
     }}
 
     @SubscribeEvent
@@ -237,8 +236,7 @@ public class EventHandlerNewMagic {
             }
         }
     } catch (Throwable t) {
-        System.out.println("[TitanForge-NewMagic-onLivingHurt] " + t.getClass().getName() + ": " + t.getMessage());
-        t.printStackTrace();
+        TitanForge.LOGGER.error("[TitanForge-NewMagic-onLivingHurt] Error in event", t);
     }}
 
     @SubscribeEvent
@@ -389,8 +387,7 @@ public class EventHandlerNewMagic {
             }
         }
     } catch (Throwable t) {
-        System.out.println("[TitanForge-NewMagic-onEntityUpdate] " + t.getClass().getName() + ": " + t.getMessage());
-        t.printStackTrace();
+        TitanForge.LOGGER.error("[TitanForge-NewMagic-onEntityUpdate] Error in event", t);
     }}
 
     @SubscribeEvent
@@ -432,9 +429,37 @@ public class EventHandlerNewMagic {
             }
         }
     } catch (Throwable t) {
-        System.out.println("[TitanForge-NewMagic-onKill] " + t.getClass().getName() + ": " + t.getMessage());
-        t.printStackTrace();
+        TitanForge.LOGGER.error("[TitanForge-NewMagic-onKill] Error in event", t);
     }}
+
+    @SubscribeEvent
+    public void onPlayerLogin(net.minecraftforge.event.entity.player.PlayerEvent.PlayerLoggedInEvent event) {
+        resetPhaseRupture(event.getPlayer());
+    }
+
+    @SubscribeEvent
+    public void onPlayerRespawn(net.minecraftforge.event.entity.player.PlayerEvent.PlayerRespawnEvent event) {
+        resetPhaseRupture(event.getPlayer());
+    }
+
+    @SubscribeEvent
+    public void onPlayerClone(net.minecraftforge.event.entity.player.PlayerEvent.Clone event) {
+        if (event.isWasDeath()) {
+            resetPhaseRupture(event.getPlayer());
+        }
+    }
+
+    private void resetPhaseRupture(PlayerEntity player) {
+        CompoundNBT pData = player.getPersistentData();
+        if (pData.getBoolean("PhaseRuptureMode")) {
+            long end = pData.getLong("PhaseRuptureEnd");
+            if (player.world.getGameTime() > end || end == 0) {
+                pData.putBoolean("PhaseRuptureMode", false);
+                player.setNoGravity(false);
+                player.removePotionEffect(Effects.INVISIBILITY);
+            }
+        }
+    }
 
     private void spawnBlackHole(World world, Vector3d pos, int ticks, double radius, int level) {
         net.minecraft.entity.item.ArmorStandEntity hole = net.minecraft.entity.EntityType.ARMOR_STAND.create(world);

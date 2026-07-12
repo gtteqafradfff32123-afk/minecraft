@@ -169,12 +169,14 @@ public class EventHandler {
                 }
             }
 
-            // Void Curse
+            // Void Curse — 20s cooldown, no visual recharge on item
             int curseLvl = EnchantmentHelper.getEnchantmentLevel(ModEnchantments.VOID_CURSE.get(), weapon);
-            if (curseLvl > 0) {
-                target.addPotionEffect(new EffectInstance(Effects.LEVITATION, 60, 1));
-                target.world.playSound(null, target.getPosX(), target.getPosY(), target.getPosZ(), SoundEvents.ENTITY_ENDER_DRAGON_FLAP, SoundCategory.PLAYERS, 0.8F, 1.0F);
-                if (!player.world.isRemote) {
+            if (curseLvl > 0 && !player.world.isRemote) {
+                long now = player.world.getGameTime();
+                if (now >= player.getPersistentData().getLong("TF_VoidCurseCD")) {
+                    player.getPersistentData().putLong("TF_VoidCurseCD", now + 400L);
+                    target.addPotionEffect(new EffectInstance(Effects.LEVITATION, 60, 1));
+                    target.world.playSound(null, target.getPosX(), target.getPosY(), target.getPosZ(), SoundEvents.ENTITY_ENDER_DRAGON_FLAP, SoundCategory.PLAYERS, 0.8F, 1.0F);
                     ServerWorld sw = (ServerWorld) player.world;
                     sw.spawnParticle(ParticleTypes.DRAGON_BREATH, target.getPosX(), target.getPosY() + 0.6, target.getPosZ(), 18, 0.35, 0.45, 0.35, 0.02);
                     sw.spawnParticle(ParticleTypes.REVERSE_PORTAL, target.getPosX(), target.getPosY() + 0.8, target.getPosZ(), 24, 0.45, 0.65, 0.45, 0.06);
@@ -185,10 +187,12 @@ public class EventHandler {
             // Executioner
             int execLvl = EnchantmentHelper.getEnchantmentLevel(ModEnchantments.EXECUTIONER.get(), weapon);
             if (execLvl > 0 && target.getHealth() <= target.getMaxHealth() * 0.25F) {
-                dmgMult *= (2.0F + execLvl);
-                target.world.playSound(null, target.getPosX(), target.getPosY(), target.getPosZ(), SoundEvents.ENTITY_PLAYER_ATTACK_CRIT, SoundCategory.PLAYERS, 1.0F, 1.0F);
-                if (!target.world.isRemote) {
-                    ((ServerWorld)target.world).spawnParticle(ParticleTypes.CRIT, target.getPosX(), target.getPosY() + 1.0, target.getPosZ(), 30, 0.5, 0.5, 0.5, 0.5);
+                if (!(target instanceof net.minecraft.entity.player.PlayerEntity)) {
+                    dmgMult *= (2.0F + execLvl);
+                    target.world.playSound(null, target.getPosX(), target.getPosY(), target.getPosZ(), SoundEvents.ENTITY_PLAYER_ATTACK_CRIT, SoundCategory.PLAYERS, 1.0F, 1.0F);
+                    if (!target.world.isRemote) {
+                        ((ServerWorld)target.world).spawnParticle(ParticleTypes.CRIT, target.getPosX(), target.getPosY() + 1.0, target.getPosZ(), 30, 0.5, 0.5, 0.5, 0.5);
+                    }
                 }
             }
 
@@ -196,8 +200,9 @@ public class EventHandler {
             int frostLvl = EnchantmentHelper.getEnchantmentLevel(ModEnchantments.FROSTBITE.get(), weapon);
             if (frostLvl > 0) {
                 int duration = 20 + frostLvl * 16;
-                target.addPotionEffect(new EffectInstance(Effects.SLOWNESS, duration, frostLvl));
-                target.addPotionEffect(new EffectInstance(Effects.WEAKNESS, duration, frostLvl));
+                int amp = Math.max(0, (int)(frostLvl * 0.4F));
+                target.addPotionEffect(new EffectInstance(Effects.SLOWNESS, duration, amp));
+                target.addPotionEffect(new EffectInstance(Effects.WEAKNESS, duration, amp));
                 target.addPotionEffect(new EffectInstance(ModEffects.FROSTBITTEN.get(), duration, frostLvl));
                 target.attackEntityFrom(ModDamageSources.FROSTBITE, 1.0F * frostLvl);
                 target.world.playSound(null, target.getPosX(), target.getPosY(), target.getPosZ(), SoundEvents.BLOCK_GLASS_BREAK, SoundCategory.PLAYERS, 1.0F, 1.5F);
@@ -213,8 +218,8 @@ public class EventHandler {
                     if (bloodPactProcessing.contains(target.getEntityId())) {
                         bloodPactProcessing.remove(target.getEntityId());
                     } else {
-                        float drain = bloodLvl == 1 ? 1.0F : bloodLvl == 2 ? 2.0F : 3.0F;
-                        float pureDmg = bloodLvl == 1 ? 10.0F : bloodLvl == 2 ? 15.0F : 20.0F;
+                        float drain = bloodLvl == 1 ? 3.0F : bloodLvl == 2 ? 5.0F : 7.0F;
+                        float pureDmg = bloodLvl == 1 ? 8.0F : bloodLvl == 2 ? 12.0F : 16.0F;
 
                         if (player.getHealth() <= 2.0F + drain) {
                             player.getPersistentData().putBoolean("BloodPactActive", false);
@@ -301,8 +306,7 @@ public class EventHandler {
             tData.putUniqueId("TF_LastHitBy", player.getUniqueID());
         }
     } catch (Throwable t) {
-        System.out.println("[TitanForge-EventHandler-onAttack] " + t.getClass().getName() + ": " + t.getMessage());
-        t.printStackTrace();
+        TitanForge.LOGGER.error("[TitanForge-EventHandler-onAttack] Error in event", t);
     }}
 
     @SubscribeEvent
@@ -385,8 +389,7 @@ public class EventHandler {
             }
         }
     } catch (Throwable t) {
-        System.out.println("[TitanForge-EventHandler-onKill] " + t.getClass().getName() + ": " + t.getMessage());
-        t.printStackTrace();
+        TitanForge.LOGGER.error("[TitanForge-EventHandler-onKill] Error in event", t);
     }}
 
     @SubscribeEvent
@@ -401,8 +404,7 @@ public class EventHandler {
                 }
             }
         } catch (Throwable t) {
-            System.out.println("[TitanForge-EventHandler-onPotionAdded] " + t.getClass().getName() + ": " + t.getMessage());
-            t.printStackTrace();
+            TitanForge.LOGGER.error("[TitanForge-EventHandler-onPotionAdded] Error in event", t);
         }
     }
 
@@ -658,7 +660,7 @@ public class EventHandler {
             }
         }
         } catch (Throwable t) {
-            System.out.println("[TitanForge-EventHandler-onPlayerTick] " + t.getClass().getName() + ": " + t.getMessage());
+            TitanForge.LOGGER.error("[TitanForge-EventHandler-onPlayerTick] Error in event", t);
         }
     }
 
@@ -672,7 +674,7 @@ public class EventHandler {
             }
         }
         } catch (Throwable t) {
-            System.out.println("[TitanForge-EventHandler-onLeftClickEmpty] " + t.getClass().getName() + ": " + t.getMessage());
+            TitanForge.LOGGER.error("[TitanForge-EventHandler-onLeftClickEmpty] Error in event", t);
         }
     }
 
@@ -739,7 +741,7 @@ public class EventHandler {
                 }
             }
         } catch (Throwable t) {
-            System.out.println("[TitanForge-EventHandler-onEntityUpdate] " + t.getClass().getName() + ": " + t.getMessage());
+            TitanForge.LOGGER.error("[TitanForge-EventHandler-onEntityUpdate] Error in event", t);
         }
     }
 

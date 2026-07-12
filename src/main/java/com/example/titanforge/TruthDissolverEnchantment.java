@@ -11,4 +11,14 @@ public class TruthDissolverEnchantment extends Enchantment {
 
     @Override
     public int getMaxLevel() { return 1; }
+
+    @Override
+    public boolean canGenerateInLoot() {
+        return false;
+    }
+
+    @Override
+    public boolean canVillagerTrade() {
+        return false;
+    }
 }
