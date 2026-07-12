@@ -10,14 +10,9 @@ import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.server.ServerWorld;
 
 public final class DeltaCopier {
-    private static int minY(BlockPos center) { return Math.max(1, center.getY() - 40); }
-    private static int maxY(BlockPos center) { return Math.min(255, center.getY() + 40); }
-
     public static void clearChunk(ServerWorld target, ChunkPos pos,
                                   BlockPos center, int radius) {
         int radiusSq = radius * radius;
-        int minY = minY(center);
-        int maxY = maxY(center);
 
         for (int lx = 0; lx < 16; lx++) {
             for (int lz = 0; lz < 16; lz++) {
@@ -27,7 +22,7 @@ public final class DeltaCopier {
                 int dz = wz - center.getZ();
                 if (dx * dx + dz * dz > radiusSq) continue;
 
-                for (int y = minY; y <= maxY; y++) {
+                for (int y = 0; y < 256; y++) {
                     BlockPos wp = new BlockPos(wx, y, wz);
                     TileEntity tile = target.getTileEntity(wp);
                     if (tile != null) target.removeTileEntity(wp);
@@ -47,11 +42,6 @@ public final class DeltaCopier {
 
         int copied = 0;
         int radiusSq = radius * radius;
-        int minSourceY = Math.max(1, sourceCenter.getY() - 40);
-        int maxSourceY = Math.min(255, sourceCenter.getY() + 40);
-
-        BlockPos.Mutable sourcePos = new BlockPos.Mutable();
-        BlockPos.Mutable targetPos = new BlockPos.Mutable();
 
         for (int localX = 0; localX < 16; localX++) {
             int sourceX = sourceChunk.getXStart() + localX;
@@ -62,27 +52,28 @@ public final class DeltaCopier {
                 int dz = sourceZ - sourceCenter.getZ();
                 if (dx * dx + dz * dz > radiusSq) continue;
 
-                for (int sourceY = minSourceY;
-                     sourceY <= maxSourceY;
-                     sourceY++) {
-                    int dy = sourceY - sourceCenter.getY();
+                for (int y = 0; y < 256; y++) {
+                    int dy = y - sourceCenter.getY();
                     int targetX = targetCenter.getX() + dx;
                     int targetY = targetCenter.getY() + dy;
                     int targetZ = targetCenter.getZ() + dz;
-                    if (targetY < 1 || targetY > 255) continue;
+                    if (targetY < 0 || targetY > 255) continue;
 
-                    sourcePos.setPos(sourceX, sourceY, sourceZ);
-                    targetPos.setPos(targetX, targetY, targetZ);
+                    BlockState state = source.getBlockState(new BlockPos(sourceX, y, sourceZ));
 
-                    BlockState state = source.getBlockState(sourcePos);
+                    if (state.getBlock() == Blocks.BEDROCK) {
+                        state = Blocks.AIR.getDefaultState();
+                    }
+
+                    BlockPos targetPos = new BlockPos(targetX, targetY, targetZ);
                     TileEntity old = target.getTileEntity(targetPos);
                     if (old != null) target.removeTileEntity(targetPos);
 
                     target.setBlockState(targetPos, state, 18);
-                    copied++;
+                    if (!state.isAir()) copied++;
 
                     if (state.hasTileEntity()) {
-                        TileEntity sourceTile = source.getTileEntity(sourcePos);
+                        TileEntity sourceTile = source.getTileEntity(new BlockPos(sourceX, y, sourceZ));
                         TileEntity targetTile = target.getTileEntity(targetPos);
                         if (sourceTile != null && targetTile != null) {
                             CompoundNBT nbt = sourceTile.write(new CompoundNBT());

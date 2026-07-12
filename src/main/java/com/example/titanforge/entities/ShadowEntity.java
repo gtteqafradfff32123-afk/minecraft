@@ -9,6 +9,8 @@ import net.minecraft.entity.ai.attributes.Attributes;
 import net.minecraft.entity.ai.goal.SwimGoal;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.entity.projectile.AbstractArrowEntity;
+import net.minecraft.entity.projectile.TridentEntity;
 import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
@@ -269,6 +271,20 @@ public class ShadowEntity extends MobEntity {
             return super.attackEntityFrom(source, amount);
         }
         if (defeated) return false;
+
+        if (source.getTrueSource() instanceof AbstractArrowEntity
+            || source.getTrueSource() instanceof TridentEntity) {
+            if (!world.isRemote) {
+                Vector3d look = getLookVec();
+                setMotion(look.x * 0.4D, 0.3D, look.z * 0.4D);
+                velocityChanged = true;
+                ((ServerWorld) world).spawnParticle(ParticleTypes.SMOKE,
+                    getPosX(), getPosY() + 1.0D, getPosZ(),
+                    12, 0.3D, 0.5D, 0.3D, 0.01D);
+            }
+            return false;
+        }
+
         if (!world.isRemote && source.getTrueSource() instanceof ServerPlayerEntity) {
             ServerPlayerEntity attacker = (ServerPlayerEntity) source.getTrueSource();
 
