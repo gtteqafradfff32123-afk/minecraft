@@ -1065,9 +1065,9 @@ public class LiminalManager {
                 st.copiesKilled >= 5 ? 2 : 0, false, false));
 
         if (st.copiesKilled >= KILLS_TO_ESCAPE) {
-            vp.server.execute(() -> {
+            runBetweenTicks(vp.server, () -> {
                 State st2 = STATES.get(vp.getUniqueID());
-                if (st2 == null) return;
+                if (st2 == null || !vp.isAlive()) return;
                 exit(vp, st2, false);
             });
         } else {
@@ -1264,11 +1264,18 @@ public class LiminalManager {
         if (early) player.addPotionEffect(new EffectInstance(Effects.WITHER, 10 * 20, 0));
     }
 
+    /** \u0422\u0435\u043B\u0435\u043F\u043E\u0440\u0442/\u0441\u043C\u0435\u043D\u0443 \u0438\u0437\u043C\u0435\u0440\u0435\u043D\u0438\u044F \u043D\u0435\u043B\u044C\u0437\u044F \u0434\u0435\u043B\u0430\u0442\u044C \u0432\u043E \u0432\u0440\u0435\u043C\u044F \u0442\u0438\u043A\u0430 \u0441\u0443\u0449\u043D\u043E\u0441\u0442\u0438
+     *  ("Removing entity while ticking!") \u2014 server.execute \u043D\u0430 \u0441\u0435\u0440\u0432\u0435\u0440\u043D\u043E\u043C \u043F\u043E\u0442\u043E\u043A\u0435
+     *  \u0432\u044B\u043F\u043E\u043B\u043D\u044F\u0435\u0442\u0441\u044F \u0441\u0440\u0430\u0437\u0443, \u043F\u043E\u044D\u0442\u043E\u043C\u0443 \u043E\u0442\u043A\u043B\u0430\u0434\u044B\u0432\u0430\u0435\u043C \u0432 \u043E\u0447\u0435\u0440\u0435\u0434\u044C \u043C\u0435\u0436\u0434\u0443 \u0442\u0438\u043A\u0430\u043C\u0438. */
+    private static void runBetweenTicks(net.minecraft.server.MinecraftServer server, Runnable task) {
+        server.enqueue(new net.minecraft.util.concurrent.TickDelayedTask(server.getTickCounter(), task));
+    }
+
     public static void completeShadowVictory(ServerPlayerEntity player, State state) {
-        player.server.execute(() -> {
+        runBetweenTicks(player.server, () -> {
+            if (!player.isAlive()) return;
             exit(player, state, true);
-            player.server.execute(() ->
-                RewardShadowManager.spawnAfterVictory(player));
+            RewardShadowManager.spawnAfterVictory(player);
         });
     }
 
@@ -1280,10 +1287,11 @@ public class LiminalManager {
         if (liminal != null) queueArenaCleanup(liminal, state);
 
         BlockPos returnPos = state.realReturnPos;
-        player.server.execute(() -> {
+        runBetweenTicks(player.server, () -> {
+            clearLockEffects(player);
+            if (!player.isAlive()) return; // \u0443\u043C\u0435\u0440/\u0432\u044B\u0448\u0435\u043B \u2014 \u0432\u0435\u0440\u043D\u0451\u0442\u0441\u044F \u0447\u0435\u0440\u0435\u0437 \u043E\u0431\u044B\u0447\u043D\u044B\u0439 \u0440\u0435\u0441\u043F\u0430\u0432\u043D
             ServerWorld overworld = player.getServer().getWorld(net.minecraft.world.World.OVERWORLD);
             player.teleport(overworld, returnPos.getX() + 0.5, returnPos.getY(), returnPos.getZ() + 0.5, player.rotationYaw, player.rotationPitch);
-            clearLockEffects(player);
             com.example.titanforge.NetworkHandler.INSTANCE.send(
                     net.minecraftforge.fml.network.PacketDistributor.PLAYER.with(() -> player),
                     new com.example.titanforge.StopMusicPacket());

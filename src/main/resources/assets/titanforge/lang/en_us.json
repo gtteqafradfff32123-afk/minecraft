@@ -209,5 +209,8 @@
     "enchantment.titanforge.psychotic_break.lore": "[T] Один точный удар, и разум забывает, кого когда-то называл другом.",
     "enchantment.titanforge.membrane_weaver.lore": "[T] Живая броня не прощает удар. Она хранит его до первого рывка.",
     "enchantment.titanforge.truth_dissolver.lore": "[T] Когда исчезает броня, камень и форма, остаётся только истина.",
-    "enchantment.titanforge.liminal_slip.lore": "[T] Между мирами есть комнаты без дверей. Эта сила знает путь, который запрещено помнить."
+    "enchantment.titanforge.liminal_slip.lore": "[T] Между мирами есть комнаты без дверей. Эта сила знает путь, который запрещено помнить.",
+    "enchantment.titanforge.zombie_virus": "Zombie Virus",
+    "enchantment.titanforge.zombie_virus.desc": "Hits infect the target. The disease progresses in stages; the dead rise as rotten servants.",
+    "effect.titanforge.zombie_virus": "Zombie Virus"
 }

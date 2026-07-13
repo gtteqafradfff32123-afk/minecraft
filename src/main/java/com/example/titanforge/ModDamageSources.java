@@ -23,4 +23,6 @@ public class ModDamageSources {
         new DamageSource("titanforge.membraneBurst").setDamageBypassesArmor().setMagicDamage();
     public static final DamageSource NECROTIC_UNDERTOW =
         new DamageSource("titanforge.necroticUndertow").setDamageBypassesArmor().setMagicDamage();
+    public static final DamageSource ZOMBIE_VIRUS =
+        new DamageSource("titanforge.zombieVirus").setDamageBypassesArmor().setMagicDamage();
 }

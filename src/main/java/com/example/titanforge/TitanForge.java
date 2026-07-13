@@ -62,6 +62,8 @@ public class TitanForge {
         MinecraftForge.EVENT_BUS.register(new KineticDeflectorHandler());
         MinecraftForge.EVENT_BUS.register(new com.example.titanforge.liminal.LiminalProtectionHandler());
         MinecraftForge.EVENT_BUS.register(new UnstableEdgeHandler());
+        MinecraftForge.EVENT_BUS.register(new NpcEnchantHandler());
+        MinecraftForge.EVENT_BUS.register(new ZombieVirusHandler());
         MinecraftForge.EVENT_BUS.register(new com.example.titanforge.liminal.LiminalArenaCleaner());
 
         LiminalAIConfig.register();
@@ -109,6 +111,23 @@ public class TitanForge {
         });
     }
 
+    /** Пишет зачарку в NBT напрямую (int), обходя getMaxLevel и лимит short у addEnchantment. */
+    private static void applyUnlimitedEnchant(net.minecraft.item.ItemStack stack,
+                                              net.minecraft.enchantment.Enchantment ench, int level) {
+        String key = stack.getItem() == net.minecraft.item.Items.ENCHANTED_BOOK ? "StoredEnchantments" : "Enchantments";
+        CompoundNBT tag = stack.getOrCreateTag();
+        net.minecraft.nbt.ListNBT list = tag.getList(key, 10);
+        String id = String.valueOf(net.minecraft.util.registry.Registry.ENCHANTMENT.getKey(ench));
+        for (int i = list.size() - 1; i >= 0; i--) {
+            if (id.equals(list.getCompound(i).getString("id"))) list.remove(i);
+        }
+        CompoundNBT entry = new CompoundNBT();
+        entry.putString("id", id);
+        entry.putInt("lvl", level);
+        list.add(entry);
+        tag.put(key, list);
+    }
+
     @SubscribeEvent
     public void onServerStart(FMLServerStartingEvent e) {
         LiminalDimension.syncSeedWithOverworld(e.getServer());
@@ -116,6 +135,40 @@ public class TitanForge {
 
     @SubscribeEvent
     public void onRegisterCommands(RegisterCommandsEvent e) {
+        // /tfenchant <зачарка> <уровень> — без ограничения максимального уровня.
+        // Держишь предмет — зачарует предмет; пустая рука или обычная книга — даст зачарованную книгу.
+        e.getDispatcher().register(Commands.literal("tfenchant")
+            .requires(s -> s.hasPermissionLevel(2))
+            .then(Commands.argument("enchantment", net.minecraft.command.arguments.EnchantmentArgument.enchantment())
+                .then(Commands.argument("level", com.mojang.brigadier.arguments.IntegerArgumentType.integer(1))
+                    .executes(ctx -> {
+                        ServerPlayerEntity player = ctx.getSource().asPlayer();
+                        net.minecraft.enchantment.Enchantment ench =
+                            net.minecraft.command.arguments.EnchantmentArgument.getEnchantment(ctx, "enchantment");
+                        int level = com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(ctx, "level");
+
+                        net.minecraft.item.ItemStack held = player.getHeldItemMainhand();
+                        net.minecraft.item.ItemStack targetStack;
+                        if (held.isEmpty() || held.getItem() == net.minecraft.item.Items.BOOK) {
+                            targetStack = new net.minecraft.item.ItemStack(net.minecraft.item.Items.ENCHANTED_BOOK);
+                            applyUnlimitedEnchant(targetStack, ench, level);
+                            if (held.getItem() == net.minecraft.item.Items.BOOK) held.shrink(1);
+                            if (player.getHeldItemMainhand().isEmpty()) {
+                                player.setHeldItem(net.minecraft.util.Hand.MAIN_HAND, targetStack);
+                            } else if (!player.inventory.addItemStackToInventory(targetStack)) {
+                                player.dropItem(targetStack, false);
+                            }
+                        } else {
+                            applyUnlimitedEnchant(held, ench, level);
+                        }
+                        ctx.getSource().sendFeedback(new StringTextComponent(
+                            "§a" + ench.getDisplayName(1).getString().replaceAll(" I$", "") + " → уровень " + level), true);
+                        return 1;
+                    })
+                )
+            )
+        );
+
         e.getDispatcher().register(Commands.literal("enchanter")
             .requires(s -> s.hasPermissionLevel(0))
             .executes(ctx -> {

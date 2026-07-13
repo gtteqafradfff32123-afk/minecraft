@@ -30,6 +30,10 @@ public class NetworkHandler {
                 PlayOneShotSoundPacket::encode,
                 PlayOneShotSoundPacket::decode,
                 PlayOneShotSoundPacket::handle);
+        INSTANCE.registerMessage(id++, ZombifiedSyncPacket.class,
+                ZombifiedSyncPacket::encode,
+                ZombifiedSyncPacket::decode,
+                ZombifiedSyncPacket::handle);
     }
 
     public static void sendTo(ServerPlayerEntity player, Object msg) {

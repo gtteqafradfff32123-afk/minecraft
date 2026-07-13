@@ -4,5 +4,7 @@
   "compatibilityLevel": "JAVA_8",
   "refmap": "titanforge.refmap.json",
   "minVersion": "0.8",
-  "mixins": []
+  "mixins": [
+    "EnchantmentHelperMixin"
+  ]
 }

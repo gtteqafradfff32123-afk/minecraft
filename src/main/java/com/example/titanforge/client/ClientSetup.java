@@ -40,5 +40,7 @@ public class ClientSetup {
         RenderingRegistry.registerEntityRenderingHandler(ModEntities.STUN_ZOMBIE.get(), StunZombieRenderer::new);
         RenderingRegistry.registerEntityRenderingHandler(EntityType.ZOMBIE, LiminalZombieRenderer::new);
         RenderingRegistry.registerEntityRenderingHandler(ModEntities.GRAVEGLASS_COLOSSUS.get(), GraveglassColossusRenderer::new);
+        com.example.titanforge.client.renderer.ZombifiedRenderers.register();
+        MinecraftForge.EVENT_BUS.register(ZombifiedClientCache.class);
     }
 }

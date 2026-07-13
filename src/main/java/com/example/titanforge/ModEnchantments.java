@@ -78,6 +78,8 @@ public class ModEnchantments {
     public static final RegistryObject<Enchantment> TRUTH_DISSOLVER = ENCHANTMENTS.register("truth_dissolver", TruthDissolverEnchantment::new);
     public static final RegistryObject<Enchantment> UNSTABLE_EDGE =
             ENCHANTMENTS.register("unstable_edge", UnstableEdgeEnchantment::new);
+    public static final RegistryObject<Enchantment> ZOMBIE_VIRUS =
+            ENCHANTMENTS.register("zombie_virus", ZombieVirusEnchantment::new);
 
     private static RegistryObject<Enchantment> register(String name, EnchantmentType type, int maxLevel, Rarity rarity) {
         return ENCHANTMENTS.register(name, () -> new TitanEnchantment(rarity, type, maxLevel));
