@@ -6,6 +6,7 @@ import com.example.titanforge.TitanForge;
 import com.example.titanforge.EnchanterScreen;
 import com.example.titanforge.client.renderer.GraveglassColossusRenderer;
 import com.example.titanforge.client.renderer.PlagueDoctorRenderer;
+import com.example.titanforge.liminal.screen.LiminalClientOverlay;
 import net.minecraft.client.gui.ScreenManager;
 import net.minecraft.client.renderer.entity.SpriteRenderer;
 import net.minecraft.entity.EntityType;
@@ -32,6 +33,7 @@ public class ClientSetup {
         });
 
         MinecraftForge.EVENT_BUS.register(LiminalFilmController.class);
+        MinecraftForge.EVENT_BUS.register(LiminalClientOverlay.class);
         RenderingRegistry.registerEntityRenderingHandler(ModEntities.PLAGUE_DOCTOR.get(), PlagueDoctorRenderer::new);
         RenderingRegistry.registerEntityRenderingHandler(ModEntities.SHADOW.get(), ShadowRenderer::new);
         RenderingRegistry.registerEntityRenderingHandler(ModEntities.PLAYER_COPY.get(), PlayerCopyRenderer::new);

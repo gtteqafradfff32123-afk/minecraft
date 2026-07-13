@@ -51,6 +51,38 @@ public class LiminalManager {
     private static final int RADIUS = 100;
     private static final int KILLS_TO_ESCAPE = 6;
     private static final int UNFREEZE_TICKS = 60;
+    private static final java.util.Set<java.util.UUID> PENDING_DEATH_EXITS =
+        java.util.concurrent.ConcurrentHashMap.newKeySet();
+
+    public static void requestDeathExit(ServerPlayerEntity player) {
+        if (player != null) {
+            PENDING_DEATH_EXITS.add(player.getUniqueID());
+        }
+    }
+
+    public static void flushPendingDeathExits(
+            net.minecraft.server.MinecraftServer server) {
+        if (PENDING_DEATH_EXITS.isEmpty()) return;
+
+        for (java.util.UUID id : new java.util.HashSet<>(PENDING_DEATH_EXITS)) {
+            PENDING_DEATH_EXITS.remove(id);
+            ServerPlayerEntity player = server.getPlayerList()
+                .getPlayerByUUID(id);
+            if (player == null) continue;
+
+            State state = STATES.remove(id);
+            if (state == null) continue;
+
+            ServerWorld liminal = LiminalDimension.get(server);
+            if (liminal != null) {
+                cleanupRuntimeState(liminal, state);
+                queueArenaCleanup(liminal, state);
+            }
+            clearLockEffects(player);
+            NetworkHandler.sendTo(player, new StopMusicPacket());
+        }
+    }
+
     public static final int SHADOW_BEHAVIOR_STALK = 0;
     public static final int SHADOW_BEHAVIOR_WANDER = 1;
     public static final int SHADOW_BEHAVIOR_STAY = 2;
@@ -67,6 +99,7 @@ public class LiminalManager {
         public int ticks = 0;
         public int copiesKilled = 0;
         public int activeCopies = 0;
+        public int activeArmedCopies = 0;
         public boolean cloneReady = false;
         public boolean shadowSpawned = false;
         public boolean frozen = false;
@@ -488,16 +521,16 @@ public class LiminalManager {
                 player.addPotionEffect(new EffectInstance(Effects.SLOWNESS, duration, amplifier, false, false));
             }
 
-            // Shadow respawn during boss fight (after breaking a shell)
-            if (st.finalRitualStarted
-                && !st.shadowSpawned
+            // Shadow respawn
+            if (!st.shadowSpawned
                 && st.shadowRespawnTimer > 0
-                && st.shadowLivesBroken < 4) {
+                && (!st.finalRitualStarted || st.shadowLivesBroken < 4)) {
                 st.shadowRespawnTimer--;
                 if (st.shadowRespawnTimer == 0) {
                     st.shadowSpawned = spawnShadow(clone, st, player);
-                    Entity entity = st.shadowId == null ? null : clone.getEntityByUuid(st.shadowId);
-                    if (entity instanceof ShadowEntity) {
+                    Entity entity = st.shadowId == null
+                        ? null : clone.getEntityByUuid(st.shadowId);
+                    if (entity instanceof ShadowEntity && st.firstHit) {
                         ((ShadowEntity) entity).setAggressive(true);
                     }
                 }
@@ -511,7 +544,13 @@ public class LiminalManager {
                     Map.Entry<UUID, Integer> e = cit.next();
                     if (st.ticks - e.getValue() > COPY_DESPAWN_TICKS) {
                         Entity ent = clone.getEntityByUuid(e.getKey());
-                        if (ent != null) ent.remove();
+                        if (ent != null) {
+                            if (ent instanceof PlayerCopyEntity
+                                && ((PlayerCopyEntity) ent).isHostileCopy()) {
+                                st.activeArmedCopies = Math.max(0, st.activeArmedCopies - 1);
+                            }
+                            ent.remove();
+                        }
                         cit.remove();
                         st.copyIds.remove(e.getKey());
                         st.activeCopies = Math.max(0, st.activeCopies - 1);
@@ -529,7 +568,13 @@ public class LiminalManager {
                     }
                     if (oldest == null) break;
                     Entity ent = clone.getEntityByUuid(oldest);
-                    if (ent != null) ent.remove();
+                    if (ent != null) {
+                        if (ent instanceof PlayerCopyEntity
+                            && ((PlayerCopyEntity) ent).isHostileCopy()) {
+                            st.activeArmedCopies = Math.max(0, st.activeArmedCopies - 1);
+                        }
+                        ent.remove();
+                    }
                     st.spawnTicks.remove(oldest);
                     st.copyIds.remove(oldest);
                     st.activeCopies = Math.max(0, st.activeCopies - 1);
@@ -843,16 +888,21 @@ public class LiminalManager {
         double[] pos = spawnPos(world.rand, state.center, player);
         copy.setLocationAndAngles(pos[0], state.center.getY() + 1, pos[1], 0f, 0f);
         copy.setOwner(player.getUniqueID());
-        copy.setHostile(true);
-        copy.setAttackTarget(player);
-        if (world.rand.nextFloat() < 0.5F) {
+        boolean armed = stage >= 2
+            && world.rand.nextFloat() < 0.20F
+            && state.activeArmedCopies < 1;
+        copy.setHostile(armed);
+
+        if (armed) {
             copy.copyEquipmentFrom(player);
+            copy.setHealth(20.0F);
         }
         boolean ok = world.addEntity(copy);
         if (ok) {
             state.activeCopies++;
             state.copyIds.add(copy.getUniqueID());
             state.spawnTicks.put(copy.getUniqueID(), state.ticks);
+            if (armed) state.activeArmedCopies++;
             world.spawnParticle(ParticleTypes.SMOKE,
                 pos[0], state.center.getY() + 1, pos[1], 15, 0.3, 0.5, 0.3, 0.02);
         }
@@ -986,6 +1036,9 @@ public class LiminalManager {
         state.spawnTicks.remove(copyId);
         if (tracked) {
             state.activeCopies = Math.max(0, state.activeCopies - 1);
+            if (copy.isHostileCopy()) {
+                state.activeArmedCopies = Math.max(0, state.activeArmedCopies - 1);
+            }
         }
 
         if (tracked && !state.finalRitualStarted) {
@@ -1171,6 +1224,7 @@ public class LiminalManager {
         state.copyIds.clear();
         state.spawnTicks.clear();
         state.activeCopies = 0;
+        state.activeArmedCopies = 0;
         state.shadowId = null;
         state.shadowSpawned = false;
     }

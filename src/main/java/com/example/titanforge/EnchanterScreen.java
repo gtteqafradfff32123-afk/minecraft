@@ -72,36 +72,37 @@ public class EnchanterScreen extends ContainerScreen<EnchanterContainer> {
         new EnchantInfo(ModEnchantments.SHADOW_STEP, ICON_MELEE, COLOR_VERY_RARE, 15),
         new EnchantInfo(ModEnchantments.PLAGUE_DOCTOR, ICON_MELEE, COLOR_VERY_RARE, 16),
         new EnchantInfo(ModEnchantments.HARVEST_OF_AGONY, ICON_MELEE, COLOR_VERY_RARE, 17),
-        new EnchantInfo(ModEnchantments.TITANS_WRATH, ICON_MELEE, COLOR_EPIC, 18),
-        new EnchantInfo(ModEnchantments.EXECUTIONER, ICON_MELEE, COLOR_EPIC, 19),
-        new EnchantInfo(ModEnchantments.FROSTBITE, ICON_MELEE, COLOR_EPIC, 20),
-        new EnchantInfo(ModEnchantments.SOUL_EATER, ICON_MELEE, COLOR_EPIC, 21),
-        new EnchantInfo(ModEnchantments.VOID_VORTEX, ICON_RANGED, COLOR_EPIC, 22),
-        new EnchantInfo(ModEnchantments.CHRONO_ANCHOR, ICON_RANGED, COLOR_EPIC, 23),
-        new EnchantInfo(ModEnchantments.KINETIC_DEFLECTOR, ICON_ARMOR, COLOR_EPIC, 24),
-        new EnchantInfo(ModEnchantments.PHASE_RUPTURE, ICON_MELEE, COLOR_EPIC, 25),
-        new EnchantInfo(ModEnchantments.CHAOS_PUPPET, ICON_MELEE, COLOR_EPIC, 26),
-        new EnchantInfo(ModEnchantments.ABSOLUTE_BLOOD, ICON_MELEE, COLOR_EPIC, 27),
-        new EnchantInfo(ModEnchantments.LEVIATHAN_WRATH, ICON_MELEE, COLOR_EPIC, 28),
-        new EnchantInfo(ModEnchantments.BLOOD_PACT, ICON_MELEE, COLOR_LEGENDARY, 29),
-        new EnchantInfo(ModEnchantments.BLACK_SINGULARITY, ICON_MELEE, COLOR_LEGENDARY, 30),
-        new EnchantInfo(ModEnchantments.NECROPOLIS_ECHO, ICON_MELEE, COLOR_LEGENDARY, 31),
-        new EnchantInfo(ModEnchantments.SOUL_REAPER, ICON_MELEE, COLOR_LEGENDARY, 32),
-        new EnchantInfo(ModEnchantments.CHAOS_DEVOUR, ICON_MELEE, COLOR_LEGENDARY, 33),
-        new EnchantInfo(ModEnchantments.SOLAR_FLARE, ICON_RANGED, COLOR_MYTHIC, 34),
-        new EnchantInfo(ModEnchantments.NECROTIC_UNDERTOW, ICON_MELEE, COLOR_MYTHIC, 35),
-        new EnchantInfo(ModEnchantments.ZEUS_VOLLEY, ICON_RANGED, COLOR_MYTHIC, 36),
-        new EnchantInfo(ModEnchantments.PSYCHOTIC_BREAK, ICON_MELEE, COLOR_MYTHIC, 37),
-        new EnchantInfo(ModEnchantments.LIMINAL_SLIP, ICON_MELEE, COLOR_MYTHIC, 38),
-        new EnchantInfo(ModEnchantments.MEMBRANE_WEAVER, ICON_ARMOR, COLOR_MYTHIC, 39),
-        new EnchantInfo(ModEnchantments.TRUTH_DISSOLVER, ICON_MELEE, COLOR_MYTHIC, 40)
+        new EnchantInfo(ModEnchantments.UNSTABLE_EDGE, ICON_MELEE, COLOR_VERY_RARE, 18),
+        new EnchantInfo(ModEnchantments.TITANS_WRATH, ICON_MELEE, COLOR_EPIC, 19),
+        new EnchantInfo(ModEnchantments.EXECUTIONER, ICON_MELEE, COLOR_EPIC, 20),
+        new EnchantInfo(ModEnchantments.FROSTBITE, ICON_MELEE, COLOR_EPIC, 21),
+        new EnchantInfo(ModEnchantments.SOUL_EATER, ICON_MELEE, COLOR_EPIC, 22),
+        new EnchantInfo(ModEnchantments.VOID_VORTEX, ICON_RANGED, COLOR_EPIC, 23),
+        new EnchantInfo(ModEnchantments.CHRONO_ANCHOR, ICON_RANGED, COLOR_EPIC, 24),
+        new EnchantInfo(ModEnchantments.KINETIC_DEFLECTOR, ICON_ARMOR, COLOR_EPIC, 25),
+        new EnchantInfo(ModEnchantments.PHASE_RUPTURE, ICON_MELEE, COLOR_EPIC, 26),
+        new EnchantInfo(ModEnchantments.CHAOS_PUPPET, ICON_MELEE, COLOR_EPIC, 27),
+        new EnchantInfo(ModEnchantments.ABSOLUTE_BLOOD, ICON_MELEE, COLOR_EPIC, 28),
+        new EnchantInfo(ModEnchantments.LEVIATHAN_WRATH, ICON_MELEE, COLOR_EPIC, 29),
+        new EnchantInfo(ModEnchantments.BLOOD_PACT, ICON_MELEE, COLOR_LEGENDARY, 30),
+        new EnchantInfo(ModEnchantments.BLACK_SINGULARITY, ICON_MELEE, COLOR_LEGENDARY, 31),
+        new EnchantInfo(ModEnchantments.NECROPOLIS_ECHO, ICON_MELEE, COLOR_LEGENDARY, 32),
+        new EnchantInfo(ModEnchantments.SOUL_REAPER, ICON_MELEE, COLOR_LEGENDARY, 33),
+        new EnchantInfo(ModEnchantments.CHAOS_DEVOUR, ICON_MELEE, COLOR_LEGENDARY, 34),
+        new EnchantInfo(ModEnchantments.SOLAR_FLARE, ICON_RANGED, COLOR_MYTHIC, 35),
+        new EnchantInfo(ModEnchantments.NECROTIC_UNDERTOW, ICON_MELEE, COLOR_MYTHIC, 36),
+        new EnchantInfo(ModEnchantments.ZEUS_VOLLEY, ICON_RANGED, COLOR_MYTHIC, 37),
+        new EnchantInfo(ModEnchantments.PSYCHOTIC_BREAK, ICON_MELEE, COLOR_MYTHIC, 38),
+        new EnchantInfo(ModEnchantments.LIMINAL_SLIP, ICON_MELEE, COLOR_MYTHIC, 39),
+        new EnchantInfo(ModEnchantments.MEMBRANE_WEAVER, ICON_ARMOR, COLOR_MYTHIC, 40),
+        new EnchantInfo(ModEnchantments.TRUTH_DISSOLVER, ICON_MELEE, COLOR_MYTHIC, 41)
     );
 
     private static final String[] TABS = { "All", "Melee", "Ranged", "Tool", "Armor" };
-    private int activeTab = 0;
+    private static int activeTab = 0;
+    private static String searchQuery = "";
 
     private TextFieldWidget searchField;
-    private String searchQuery = "";
     private int selectedIndex = 0;
     private int scrollOffset = 0;
     private int descScrollOffset = 0;
@@ -128,6 +129,7 @@ public class EnchanterScreen extends ContainerScreen<EnchanterContainer> {
             searchQuery = s;
             rebuildFilter();
         });
+        this.searchField.setText(searchQuery);
         this.children.add(this.searchField);
     }
 
@@ -163,6 +165,7 @@ public class EnchanterScreen extends ContainerScreen<EnchanterContainer> {
     private void rebuildDescLines() {
         wrappedDescLines.clear();
         wrappedHelpLines.clear();
+        wrappedLoreLines.clear();
         descScrollOffset = 0;
 
         Enchantment ench = getSelectedEnchantment();

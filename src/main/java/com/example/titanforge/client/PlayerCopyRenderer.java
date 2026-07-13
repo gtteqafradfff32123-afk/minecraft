@@ -5,6 +5,9 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.client.renderer.entity.EntityRendererManager;
 import net.minecraft.client.renderer.entity.MobRenderer;
+import net.minecraft.client.renderer.entity.layers.BipedArmorLayer;
+import net.minecraft.client.renderer.entity.layers.HeldItemLayer;
+import net.minecraft.client.renderer.entity.model.BipedModel;
 import net.minecraft.client.renderer.entity.model.PlayerModel;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
@@ -23,6 +26,11 @@ public final class PlayerCopyRenderer
 
     public PlayerCopyRenderer(EntityRendererManager manager) {
         super(manager, new PlayerModel<>(0.0F, false), 0.5F);
+        this.addLayer(new BipedArmorLayer<>(
+            this,
+            new BipedModel<>(0.5F),
+            new BipedModel<>(1.0F)));
+        this.addLayer(new HeldItemLayer<>(this));
     }
 
     private OwnerSkinResolver.SkinData skin(PlayerCopyEntity entity) {

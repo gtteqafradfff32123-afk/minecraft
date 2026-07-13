@@ -1,36 +1,20 @@
 package com.example.titanforge.liminal.screen;
 
-import com.example.titanforge.TitanForge;
-import com.example.titanforge.liminal.LiminalDimension;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.AbstractGui;
-import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
 
-import java.util.Random;
-
-@Mod.EventBusSubscriber(
-    modid = TitanForge.MOD_ID,
-    bus = Mod.EventBusSubscriber.Bus.FORGE,
-    value = Dist.CLIENT
-)
 public final class LiminalClientOverlay {
-    private static final Random GRAIN = new Random();
-    private static int movieTicks;
-
     private LiminalClientOverlay() {}
 
     @SubscribeEvent
     public static void onClientTick(TickEvent.ClientTickEvent event) {
         if (event.phase != TickEvent.Phase.END) return;
         LiminalLoadingClient.tick();
-        movieTicks++;
     }
 
     @SubscribeEvent
@@ -47,12 +31,6 @@ public final class LiminalClientOverlay {
         if (LiminalLoadingClient.isActive()
             || LiminalLoadingClient.getOverlayStrength(event.getPartialTicks()) > 0.0F) {
             renderLoading(matrix, mc, width, height, event.getPartialTicks());
-            return;
-        }
-
-        ResourceLocation current = mc.world.getDimensionKey().getLocation();
-        if (current.equals(LiminalDimension.LIMINAL_WORLD.getLocation())) {
-            renderOldMovie(matrix, width, height);
         }
     }
 
@@ -106,42 +84,5 @@ public final class LiminalClientOverlay {
         RenderSystem.disableBlend();
     }
 
-    private static void renderOldMovie(MatrixStack matrix, int width, int height) {
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
-
-        AbstractGui.fill(matrix, 0, 0, width, height, 0x171C1208);
-
-        int offset = movieTicks & 3;
-        for (int y = offset; y < height; y += 4) {
-            AbstractGui.fill(matrix, 0, y, width, y + 1, 0x16000000);
-        }
-
-        GRAIN.setSeed(movieTicks * 341873128712L);
-        int grainCount = Math.max(90, width * height / 5200);
-        for (int i = 0; i < grainCount; i++) {
-            int x = GRAIN.nextInt(Math.max(1, width));
-            int y = GRAIN.nextInt(Math.max(1, height));
-            int size = 1 + GRAIN.nextInt(2);
-            int color = GRAIN.nextBoolean() ? 0x18FFFFFF : 0x18000000;
-            AbstractGui.fill(matrix, x, y, x + size, y + size, color);
-        }
-
-        if (movieTicks % 7 == 0) {
-            int scratches = 1 + GRAIN.nextInt(3);
-            for (int i = 0; i < scratches; i++) {
-                int x = GRAIN.nextInt(Math.max(1, width));
-                AbstractGui.fill(matrix, x, 0, x + 1, height, 0x22E8DEC8);
-            }
-        }
-
-        int flicker = 5 + (int) ((Math.sin(movieTicks * 0.31D) + 1.0D) * 4.0D);
-        AbstractGui.fill(matrix, 0, 0, width, height,
-            (flicker << 24) | 0x00F0D8A0);
-
-        renderVignette(matrix, width, height, 0.42F);
-
-        RenderSystem.color4f(1F, 1F, 1F, 1F);
-        RenderSystem.disableBlend();
-    }
 }
+

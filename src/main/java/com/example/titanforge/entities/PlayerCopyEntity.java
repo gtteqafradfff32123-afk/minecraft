@@ -5,6 +5,8 @@ import com.example.titanforge.liminal.LiminalManager;
 import net.minecraft.entity.CreatureEntity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.MobEntity;
+import net.minecraft.inventory.EquipmentSlotType;
+import net.minecraft.item.ItemStack;
 import net.minecraft.entity.ai.attributes.AttributeModifierMap;
 import net.minecraft.entity.ai.attributes.Attributes;
 import net.minecraft.entity.ai.goal.MeleeAttackGoal;
@@ -15,6 +17,7 @@ import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
+import net.minecraft.potion.EffectInstance;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.World;
@@ -38,7 +41,7 @@ public class PlayerCopyEntity extends CreatureEntity {
         return MobEntity.func_233666_p_()
                 .createMutableAttribute(Attributes.MAX_HEALTH, 40.0D)
                 .createMutableAttribute(Attributes.MOVEMENT_SPEED, 0.35D)
-                .createMutableAttribute(Attributes.KNOCKBACK_RESISTANCE, 0.8D)
+                .createMutableAttribute(Attributes.KNOCKBACK_RESISTANCE, 0.15D)
                 .createMutableAttribute(Attributes.FOLLOW_RANGE, 128.0D)
                 .createMutableAttribute(Attributes.ATTACK_DAMAGE, 6.0D)
                 .createMutableAttribute(Attributes.ARMOR, 4.0D);
@@ -108,27 +111,51 @@ public class PlayerCopyEntity extends CreatureEntity {
     }
 
     public void copyEquipmentFrom(ServerPlayerEntity player) {
-        setItemStackToSlot(net.minecraft.inventory.EquipmentSlotType.MAINHAND,
+        ItemStack bestSword = ItemStack.EMPTY;
+        double bestDamage = -1.0D;
+        setItemStackToSlot(EquipmentSlotType.MAINHAND,
                 player.getHeldItemMainhand().copy());
-        setItemStackToSlot(net.minecraft.inventory.EquipmentSlotType.OFFHAND,
+        setItemStackToSlot(EquipmentSlotType.OFFHAND,
                 player.getHeldItemOffhand().copy());
-        setItemStackToSlot(net.minecraft.inventory.EquipmentSlotType.HEAD,
-                player.getItemStackFromSlot(net.minecraft.inventory.EquipmentSlotType.HEAD).copy());
-        setItemStackToSlot(net.minecraft.inventory.EquipmentSlotType.CHEST,
-                player.getItemStackFromSlot(net.minecraft.inventory.EquipmentSlotType.CHEST).copy());
-        setItemStackToSlot(net.minecraft.inventory.EquipmentSlotType.LEGS,
-                player.getItemStackFromSlot(net.minecraft.inventory.EquipmentSlotType.LEGS).copy());
-        setItemStackToSlot(net.minecraft.inventory.EquipmentSlotType.FEET,
-                player.getItemStackFromSlot(net.minecraft.inventory.EquipmentSlotType.FEET).copy());
 
-        for (net.minecraft.inventory.EquipmentSlotType slot :
-                net.minecraft.inventory.EquipmentSlotType.values()) {
+        for (ItemStack stack : player.inventory.mainInventory) {
+            if (!(stack.getItem() instanceof net.minecraft.item.SwordItem)) {
+                continue;
+            }
+
+            net.minecraft.item.SwordItem sword =
+                (net.minecraft.item.SwordItem) stack.getItem();
+            double damage = sword.getAttackDamage();
+            if (damage > bestDamage) {
+                bestDamage = damage;
+                bestSword = stack.copy();
+            }
+        }
+
+        setItemStackToSlot(EquipmentSlotType.MAINHAND, bestSword);
+        setItemStackToSlot(EquipmentSlotType.OFFHAND, ItemStack.EMPTY);
+
+        setItemStackToSlot(EquipmentSlotType.HEAD,
+            player.getItemStackFromSlot(EquipmentSlotType.HEAD).copy());
+        setItemStackToSlot(EquipmentSlotType.CHEST,
+            player.getItemStackFromSlot(EquipmentSlotType.CHEST).copy());
+        setItemStackToSlot(EquipmentSlotType.LEGS,
+            player.getItemStackFromSlot(EquipmentSlotType.LEGS).copy());
+        setItemStackToSlot(EquipmentSlotType.FEET,
+            player.getItemStackFromSlot(EquipmentSlotType.FEET).copy());
+
+        for (EquipmentSlotType slot : EquipmentSlotType.values()) {
             setDropChance(slot, 0.0F);
         }
     }
 
     @Override
     public boolean canDropLoot() {
+        return false;
+    }
+
+    @Override
+    public boolean isPotionApplicable(EffectInstance effect) {
         return false;
     }
 
@@ -150,6 +177,10 @@ public class PlayerCopyEntity extends CreatureEntity {
     public void livingTick() {
         super.livingTick();
         if (world.isRemote) return;
+
+        if (!isHostileCopy() && isAlive() && ticksExisted % 20 == 0) {
+            heal(1.0F);
+        }
 
         PlayerEntity p = getOwnerId().map(id -> world.getPlayerByUuid(id)).orElse(null);
         if (p != null) {

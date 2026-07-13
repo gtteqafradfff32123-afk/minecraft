@@ -128,7 +128,7 @@ public final class ShadowCombatManager {
 
     private static void falseSelf(ServerWorld world, ServerPlayerEntity player,
                                   LiminalManager.State state) {
-        for (int i = 0; i < 2 + Math.min(3, state.collapseStage / 3); i++) {
+        for (int i = 0; i < 1 + Math.min(2, state.collapseStage / 3); i++) {
             LiminalManager.spawnDirectorCopy(world, state, player, state.collapseStage);
         }
         world.playSound(null, player.getPosition(), SoundEvents.ENTITY_ILLUSIONER_MIRROR_MOVE,
@@ -197,7 +197,7 @@ public final class ShadowCombatManager {
         int adds;
         switch (state.shadowPhase) {
             case AWAKENED: adds = 1; break;
-            case HUNTER: adds = 2; break;
+            case HUNTER: adds = 1; break;
             case FRACTURED: adds = 2; break;
             default: adds = 0;
         }

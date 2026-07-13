@@ -168,11 +168,18 @@ public class TitanForge {
         if (e.getEntityLiving() instanceof ServerPlayerEntity) {
             ServerPlayerEntity p = (ServerPlayerEntity) e.getEntityLiving();
             if (LiminalManager.isInside(p)) {
-                LiminalManager.forceExit(p, true);
+                LiminalManager.requestDeathExit(p);
             } else {
                 LiminalManager.onPlayerDeath(p);
             }
         }
+    }
+
+    @SubscribeEvent
+    public void onServerTick(net.minecraftforge.event.TickEvent.ServerTickEvent event) {
+        if (event.phase != net.minecraftforge.event.TickEvent.Phase.END) return;
+        LiminalManager.flushPendingDeathExits(
+            net.minecraftforge.fml.server.ServerLifecycleHooks.getCurrentServer());
     }
 
     @SubscribeEvent

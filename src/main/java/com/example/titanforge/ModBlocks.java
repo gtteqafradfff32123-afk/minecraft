@@ -12,17 +12,19 @@ public final class ModBlocks {
 
     public static final RegistryObject<Block> RED_DECAY_BLOCK = BLOCKS.register(
         "red_decay_block",
-        () -> new DecayBlock(null,
+        () -> new DecayBlock(
+            null,
+            30, 31,
             Block.Properties.create(Material.ROCK)
-                .hardnessAndResistance(2.0F, 3.0F)
-                .tickRandomly()));
+                .hardnessAndResistance(2.0F, 3.0F)));
 
     public static final RegistryObject<Block> YELLOW_DECAY_BLOCK = BLOCKS.register(
         "yellow_decay_block",
-        () -> new DecayBlock(RED_DECAY_BLOCK,
+        () -> new DecayBlock(
+            RED_DECAY_BLOCK,
+            40, 41,
             Block.Properties.create(Material.ROCK)
-                .hardnessAndResistance(2.0F, 3.0F)
-                .tickRandomly()));
+                .hardnessAndResistance(2.0F, 3.0F)));
 
     private ModBlocks() {}
 }

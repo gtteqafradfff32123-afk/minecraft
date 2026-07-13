@@ -92,19 +92,34 @@ public final class LiminalAnomalyManager {
         removeFalseExit(world, state);
     }
 
-    private static void spawnFootprints(ServerWorld world, ServerPlayerEntity player,
-                                        LiminalManager.State liminal) {
-        Vector3d direction = player.getMotion().mul(1.0D, 0.0D, 1.0D);
-        if (direction.lengthSquared() < 0.01D) direction = player.getLookVec().mul(1.0D, 0.0D, 1.0D);
-        direction = direction.normalize();
-        for (int i = 3; i <= 10; i++) {
-            double x = player.getPosX() + direction.x * i;
-            double z = player.getPosZ() + direction.z * i;
-            if (!inside(liminal, x, z, 4.0D)) break;
-            BlockPos ground = findGround(world, new BlockPos(x, player.getPosY(), z));
-            world.spawnParticle(ParticleTypes.ASH,
-                    ground.getX() + 0.5D, ground.getY() + 1.02D, ground.getZ() + 0.5D,
-                    3, 0.09D, 0.01D, 0.09D, 0.0D);
+    private static void spawnFootprints(ServerWorld world,
+                                        ServerPlayerEntity player,
+                                        LiminalManager.State state) {
+        Vector3d forward = player.getMotion().mul(1.0D, 0.0D, 1.0D);
+        if (forward.lengthSquared() < 0.01D) {
+            forward = player.getLookVec().mul(1.0D, 0.0D, 1.0D);
+        }
+        forward = forward.normalize();
+        Vector3d side = new Vector3d(-forward.z, 0.0D, forward.x);
+
+        for (int i = 2; i <= 9; i++) {
+            Vector3d foot = player.getPositionVec()
+                .add(forward.scale(i * 1.25D))
+                .add(side.scale((i & 1) == 0 ? 0.28D : -0.28D));
+
+            BlockPos ground = findGround(world,
+                new BlockPos(foot.x, player.getPosY() + 4.0D, foot.z));
+
+            world.spawnParticle(
+                player,
+                ParticleTypes.SOUL,
+                true,
+                ground.getX() + 0.5D,
+                ground.getY() + 1.03D,
+                ground.getZ() + 0.5D,
+                5,
+                0.07D, 0.01D, 0.07D,
+                0.0D);
         }
     }
 
